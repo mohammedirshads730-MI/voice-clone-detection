@@ -1,0 +1,3314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FitTrack Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    /* ============================================
+       CSS VARIABLES & GLOBAL RESET
+    ============================================ */
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #111118;
+      --bg-card: #16161f;
+      --bg-card-hover: #1c1c28;
+      --border: #2a2a3a;
+      --border-light: #333345;
+
+      --accent-lime: #c8f542;
+      --accent-lime-dim: rgba(200, 245, 66, 0.15);
+      --accent-lime-glow: rgba(200, 245, 66, 0.3);
+      --accent-orange: #ff6b35;
+      --accent-blue: #4e9fff;
+      --accent-purple: #9b72ff;
+      --accent-red: #ff4757;
+      --accent-teal: #2ed573;
+
+      --text-primary: #f0f0f5;
+      --text-secondary: #8888a0;
+      --text-muted: #55556a;
+      --text-accent: #c8f542;
+
+      --font-display: 'Bebas Neue', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 28px;
+
+      --shadow-card: 0 4px 24px rgba(0,0,0,0.4);
+      --shadow-glow: 0 0 40px rgba(200, 245, 66, 0.12);
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+      --navbar-h: 68px;
+    }
+
+    [data-theme="light"] {
+      --bg-primary: #f5f5fa;
+      --bg-secondary: #ebebf5;
+      --bg-card: #ffffff;
+      --bg-card-hover: #f8f8ff;
+      --border: #e0e0ee;
+      --border-light: #d0d0e5;
+      --text-primary: #0a0a1a;
+      --text-secondary: #555570;
+      --text-muted: #9999b5;
+      --accent-lime: #5a9e00;
+      --accent-lime-dim: rgba(90, 158, 0, 0.1);
+      --accent-lime-glow: rgba(90, 158, 0, 0.2);
+      --text-accent: #4a8500;
+      --shadow-card: 0 4px 24px rgba(0,0,0,0.08);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+    ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    /* ============================================
+       UTILITY CLASSES
+    ============================================ */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    .flex { display: flex; }
+    .flex-col { flex-direction: column; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .justify-center { justify-content: center; }
+    .gap-4 { gap: 16px; }
+    .gap-6 { gap: 24px; }
+    .gap-8 { gap: 32px; }
+    .text-center { text-align: center; }
+    .w-full { width: 100%; }
+    .relative { position: relative; }
+    .overflow-hidden { overflow: hidden; }
+
+    /* ============================================
+       NAVBAR
+    ============================================ */
+    .navbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--navbar-h);
+      background: rgba(10, 10, 15, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      transition: var(--transition);
+    }
+
+    [data-theme="light"] .navbar {
+      background: rgba(245, 245, 250, 0.88);
+    }
+
+    .navbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent-lime);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      transition: var(--transition);
+    }
+
+    .logo:hover .logo-icon { transform: rotate(-10deg) scale(1.1); }
+
+    .logo-text {
+      font-family: var(--font-display);
+      font-size: 22px;
+      letter-spacing: 1px;
+      color: var(--text-primary);
+    }
+
+    .logo-text span { color: var(--accent-lime); }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      list-style: none;
+    }
+
+    .nav-link {
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+
+    .nav-link:hover { color: var(--text-primary); background: var(--bg-card); }
+    .nav-link.active { color: var(--accent-lime); background: var(--accent-lime-dim); }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .theme-toggle {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: var(--transition);
+    }
+
+    .theme-toggle:hover { color: var(--accent-lime); border-color: var(--accent-lime); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: var(--transition);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--accent-lime);
+      color: #0a0a0f;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px var(--accent-lime-glow);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-outline:hover { border-color: var(--accent-lime); color: var(--accent-lime); background: var(--accent-lime-dim); }
+
+    .btn-ghost {
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover { color: var(--text-primary); border-color: var(--border-light); }
+
+    .btn-danger { background: var(--accent-red); color: #fff; }
+    .btn-danger:hover { opacity: 0.85; transform: translateY(-1px); }
+
+    .btn-sm { padding: 7px 14px; font-size: 13px; }
+    .btn-lg { padding: 14px 32px; font-size: 16px; border-radius: var(--radius-md); }
+
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 6px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-card);
+    }
+
+    .hamburger span {
+      width: 20px;
+      height: 2px;
+      background: var(--text-secondary);
+      border-radius: 2px;
+      transition: var(--transition);
+    }
+
+    /* ============================================
+       PAGE LAYOUT
+    ============================================ */
+    .page {
+      padding-top: var(--navbar-h);
+      min-height: 100vh;
+    }
+
+    /* ============================================
+       HOME PAGE
+    ============================================ */
+    .hero {
+      min-height: calc(100vh - var(--navbar-h));
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      text-align: center;
+      padding: 60px 24px;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .hero-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.15;
+      animation: float 8s ease-in-out infinite;
+    }
+
+    .hero-orb-1 {
+      width: 500px; height: 500px;
+      background: var(--accent-lime);
+      top: -200px; right: -100px;
+      animation-delay: 0s;
+    }
+
+    .hero-orb-2 {
+      width: 400px; height: 400px;
+      background: var(--accent-orange);
+      bottom: -150px; left: -50px;
+      animation-delay: -3s;
+    }
+
+    .hero-orb-3 {
+      width: 300px; height: 300px;
+      background: var(--accent-purple);
+      top: 40%; left: 40%;
+      animation-delay: -5s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-30px) scale(1.05); }
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 100px;
+      border: 1px solid var(--border-light);
+      background: var(--bg-card);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.5px;
+      margin-bottom: 24px;
+      animation: fadeInUp 0.6s ease both;
+    }
+
+    .hero-badge .dot {
+      width: 7px; height: 7px;
+      background: var(--accent-lime);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(64px, 10vw, 130px);
+      line-height: 0.95;
+      letter-spacing: 2px;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+      animation: fadeInUp 0.6s ease 0.1s both;
+    }
+
+    .hero-title .highlight {
+      color: var(--accent-lime);
+      display: block;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(16px, 2.5vw, 20px);
+      color: var(--text-secondary);
+      max-width: 560px;
+      margin: 20px auto 40px;
+      line-height: 1.6;
+      animation: fadeInUp 0.6s ease 0.2s both;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+      animation: fadeInUp 0.6s ease 0.3s both;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 40px;
+      margin-top: 80px;
+      animation: fadeInUp 0.6s ease 0.4s both;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .hero-stat {
+      text-align: center;
+    }
+
+    .hero-stat-num {
+      font-family: var(--font-display);
+      font-size: 42px;
+      color: var(--accent-lime);
+      line-height: 1;
+    }
+
+    .hero-stat-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Features section */
+    .section {
+      padding: 80px 24px;
+    }
+
+    .section-label {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--accent-lime);
+      background: var(--accent-lime-dim);
+      padding: 5px 12px;
+      border-radius: 100px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 14px;
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(36px, 5vw, 60px);
+      letter-spacing: 1px;
+      line-height: 1.05;
+      color: var(--text-primary);
+      margin-bottom: 14px;
+    }
+
+    .section-desc {
+      font-size: 16px;
+      color: var(--text-secondary);
+      max-width: 500px;
+      line-height: 1.65;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 50px;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      transition: var(--transition);
+      cursor: default;
+    }
+
+    .feature-card:hover {
+      border-color: var(--border-light);
+      background: var(--bg-card-hover);
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-card);
+    }
+
+    .feature-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 18px;
+    }
+
+    .feature-card h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .feature-card p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* How it works */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 50px;
+    }
+
+    .step-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px 24px;
+      position: relative;
+      transition: var(--transition);
+    }
+
+    .step-card:hover { border-color: var(--accent-lime); box-shadow: var(--shadow-glow); }
+
+    .step-num {
+      font-family: var(--font-display);
+      font-size: 52px;
+      color: var(--accent-lime);
+      opacity: 0.3;
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+
+    .step-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+    .step-card p { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+
+    /* CTA Banner */
+    .cta-banner {
+      background: var(--accent-lime);
+      border-radius: var(--radius-xl);
+      padding: 56px 48px;
+      text-align: center;
+      margin: 0 24px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-banner::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -30%;
+      width: 400px;
+      height: 400px;
+      background: rgba(0,0,0,0.08);
+      border-radius: 50%;
+    }
+
+    .cta-banner h2 {
+      font-family: var(--font-display);
+      font-size: clamp(32px, 5vw, 56px);
+      color: #0a0a0f;
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .cta-banner p {
+      font-size: 16px;
+      color: rgba(0,0,0,0.65);
+      margin-bottom: 28px;
+      position: relative;
+    }
+
+    .cta-banner .btn {
+      background: #0a0a0f;
+      color: var(--accent-lime);
+      position: relative;
+    }
+
+    .cta-banner .btn:hover { background: #1a1a2a; transform: translateY(-2px); }
+
+    /* ============================================
+       DASHBOARD
+    ============================================ */
+    .dashboard {
+      padding: 32px 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .page-header {
+      margin-bottom: 32px;
+    }
+
+    .page-header h1 {
+      font-family: var(--font-display);
+      font-size: clamp(32px, 4vw, 48px);
+      letter-spacing: 1px;
+      line-height: 1.1;
+    }
+
+    .page-header p {
+      color: var(--text-secondary);
+      margin-top: 6px;
+      font-size: 15px;
+    }
+
+    .greeting-name { color: var(--accent-lime); }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 22px 24px;
+      transition: var(--transition);
+      cursor: default;
+    }
+
+    .stat-card:hover { border-color: var(--border-light); transform: translateY(-2px); box-shadow: var(--shadow-card); }
+
+    .stat-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-icon {
+      width: 34px; height: 34px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .stat-value {
+      font-family: var(--font-display);
+      font-size: 36px;
+      letter-spacing: 1px;
+      line-height: 1;
+    }
+
+    .stat-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .stat-change {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 100px;
+    }
+
+    .stat-change.up { color: var(--accent-teal); background: rgba(46, 213, 115, 0.12); }
+    .stat-change.down { color: var(--accent-red); background: rgba(255, 71, 87, 0.12); }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      transition: var(--transition);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .card-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .progress-ring {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin: 16px 0;
+    }
+
+    .ring-wrap { position: relative; flex-shrink: 0; }
+
+    .ring-label {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .ring-pct {
+      font-family: var(--font-display);
+      font-size: 24px;
+      line-height: 1;
+      color: var(--text-primary);
+    }
+
+    .ring-desc { font-size: 10px; color: var(--text-muted); }
+
+    .ring-info h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .ring-info p { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+
+    /* Activity list */
+    .activity-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+
+    .activity-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-secondary);
+      transition: var(--transition);
+    }
+
+    .activity-item:hover { background: var(--bg-card-hover); }
+
+    .activity-icon {
+      width: 36px; height: 36px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .activity-info { flex: 1; min-width: 0; }
+    .activity-name { font-size: 13px; font-weight: 600; }
+    .activity-time { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .activity-cal { font-family: var(--font-mono); font-size: 12px; color: var(--accent-lime); font-weight: 600; }
+
+    /* Water tracker */
+    .water-tracker { display: flex; flex-direction: column; gap: 12px; }
+    .water-cups { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .water-cup {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      border: 2px solid var(--border);
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: var(--transition);
+      color: var(--text-muted);
+    }
+
+    .water-cup.filled {
+      background: rgba(78, 159, 255, 0.2);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    .water-cup:hover { border-color: var(--accent-blue); }
+
+    .water-info { display: flex; justify-content: space-between; align-items: center; }
+    .water-val { font-family: var(--font-display); font-size: 28px; color: var(--accent-blue); }
+    .water-goal { font-size: 12px; color: var(--text-muted); }
+
+    /* Progress bar */
+    .progress-bar-wrap { margin: 8px 0; }
+    .progress-bar-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
+
+    .progress-bar {
+      height: 6px;
+      background: var(--bg-secondary);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 100px;
+      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ============================================
+       WORKOUT TRACKER
+    ============================================ */
+    .workout-grid {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .workout-form-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      position: sticky;
+      top: calc(var(--navbar-h) + 20px);
+    }
+
+    .form-group { margin-bottom: 16px; }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 11px 14px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 14px;
+      transition: var(--transition);
+      outline: none;
+    }
+
+    .form-control:focus { border-color: var(--accent-lime); box-shadow: 0 0 0 3px var(--accent-lime-dim); }
+    .form-control::placeholder { color: var(--text-muted); }
+
+    select.form-control { cursor: pointer; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* Workout type chips */
+    .type-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+
+    .type-chip {
+      padding: 6px 14px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .type-chip:hover { border-color: var(--accent-lime); color: var(--accent-lime); }
+    .type-chip.selected { background: var(--accent-lime-dim); border-color: var(--accent-lime); color: var(--accent-lime); }
+
+    /* Workout list */
+    .workouts-list { display: flex; flex-direction: column; gap: 12px; }
+
+    .workout-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: var(--transition);
+      cursor: default;
+    }
+
+    .workout-card:hover { border-color: var(--border-light); background: var(--bg-card-hover); }
+
+    .workout-type-icon {
+      width: 46px; height: 46px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .workout-info { flex: 1; min-width: 0; }
+    .workout-name { font-size: 15px; font-weight: 600; }
+    .workout-meta { font-size: 12px; color: var(--text-muted); margin-top: 4px; display: flex; gap: 12px; }
+    .workout-meta span { display: flex; align-items: center; gap: 4px; }
+
+    .workout-stats { display: flex; gap: 16px; text-align: center; }
+
+    .w-stat-val {
+      font-family: var(--font-display);
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .w-stat-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+    .workout-actions { display: flex; gap: 8px; }
+
+    /* Filter bar */
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .search-input-wrap { position: relative; flex: 1; min-width: 200px; }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 14px 10px 36px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 14px;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .search-input:focus { border-color: var(--accent-lime); }
+    .search-input::placeholder { color: var(--text-muted); }
+
+    /* ============================================
+       NUTRITION TRACKER
+    ============================================ */
+    .nutrition-grid {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .macro-ring-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .macro-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      text-align: center;
+      transition: var(--transition);
+    }
+
+    .macro-card:hover { transform: translateY(-2px); }
+
+    .macro-value {
+      font-family: var(--font-display);
+      font-size: 28px;
+      line-height: 1;
+      margin: 8px 0 4px;
+    }
+
+    .macro-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .macro-unit { font-size: 11px; color: var(--text-muted); }
+
+    .meals-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .meal-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: var(--transition);
+    }
+
+    .meal-item:hover { border-color: var(--border-light); }
+
+    .meal-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .meal-info { flex: 1; }
+    .meal-name { font-size: 14px; font-weight: 600; }
+    .meal-time { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    .meal-macros { display: flex; gap: 10px; align-items: center; }
+
+    .meal-macro-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 100px;
+    }
+
+    .meal-cal {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent-orange);
+    }
+
+    /* Calorie gauge */
+    .calorie-gauge-wrap {
+      text-align: center;
+      padding: 16px 0;
+    }
+
+    .calorie-gauge-num {
+      font-family: var(--font-display);
+      font-size: 52px;
+      color: var(--text-primary);
+      line-height: 1;
+    }
+
+    .calorie-gauge-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .calorie-gauge-remaining { font-size: 14px; color: var(--accent-lime); font-weight: 600; margin-top: 8px; }
+
+    /* ============================================
+       PROGRESS / ANALYTICS
+    ============================================ */
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .chart-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+    }
+
+    .chart-wrap { position: relative; height: 220px; }
+
+    .achievement-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .achievement-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      text-align: center;
+      transition: var(--transition);
+    }
+
+    .achievement-card.unlocked {
+      border-color: var(--accent-lime);
+      background: var(--accent-lime-dim);
+    }
+
+    .achievement-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-card); }
+
+    .achievement-icon { font-size: 28px; margin-bottom: 8px; display: block; }
+    .achievement-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .achievement-desc { font-size: 11px; color: var(--text-muted); }
+
+    .locked-overlay {
+      opacity: 0.4;
+      filter: grayscale(1);
+    }
+
+    /* AI Suggestions */
+    .ai-suggestions { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+
+    .ai-suggestion-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      gap: 14px;
+      transition: var(--transition);
+    }
+
+    .ai-suggestion-card:hover { border-color: var(--accent-purple); background: rgba(155, 114, 255, 0.05); }
+
+    .ai-icon {
+      width: 36px; height: 36px;
+      border-radius: 9px;
+      background: rgba(155, 114, 255, 0.15);
+      border: 1px solid rgba(155, 114, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .ai-suggestion-text h4 { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .ai-suggestion-text p { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+
+    /* Challenges */
+    .challenge-list { display: flex; flex-direction: column; gap: 12px; }
+
+    .challenge-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      transition: var(--transition);
+    }
+
+    .challenge-card:hover { border-color: var(--accent-orange); }
+
+    .challenge-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .challenge-icon { font-size: 24px; }
+    .challenge-title { font-size: 14px; font-weight: 600; }
+    .challenge-subtitle { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .challenge-reward { margin-left: auto; font-size: 12px; color: var(--accent-orange); font-weight: 600; }
+
+    /* ============================================
+       LOGIN / REGISTER
+    ============================================ */
+    .auth-page {
+      min-height: calc(100vh - var(--navbar-h));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .auth-bg-text {
+      position: absolute;
+      font-family: var(--font-display);
+      font-size: 260px;
+      color: var(--bg-card);
+      user-select: none;
+      pointer-events: none;
+      bottom: -40px;
+      left: 50%;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      letter-spacing: 8px;
+    }
+
+    .auth-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 40px;
+      width: 100%;
+      max-width: 440px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .auth-logo {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .auth-title {
+      font-family: var(--font-display);
+      font-size: 32px;
+      letter-spacing: 1px;
+      text-align: center;
+      margin-bottom: 6px;
+    }
+
+    .auth-subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .auth-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+      margin-bottom: 24px;
+    }
+
+    .auth-tab {
+      padding: 9px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: var(--transition);
+      color: var(--text-muted);
+      border: none;
+      background: transparent;
+    }
+
+    .auth-tab.active {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    }
+
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .auth-divider::before,
+    .auth-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .social-btn {
+      width: 100%;
+      padding: 11px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: var(--transition);
+      margin-bottom: 10px;
+    }
+
+    .social-btn:hover { border-color: var(--border-light); background: var(--bg-card-hover); }
+
+    .auth-footer {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 20px;
+    }
+
+    .auth-footer a {
+      color: var(--accent-lime);
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    /* ============================================
+       NOTIFICATION TOAST
+    ============================================ */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 280px;
+      max-width: 380px;
+      pointer-events: all;
+      box-shadow: var(--shadow-card);
+      animation: slideInToast 0.3s ease;
+    }
+
+    .toast.success { border-left: 3px solid var(--accent-teal); }
+    .toast.error { border-left: 3px solid var(--accent-red); }
+    .toast.info { border-left: 3px solid var(--accent-blue); }
+
+    .toast-icon { font-size: 18px; flex-shrink: 0; }
+    .toast-text { flex: 1; }
+    .toast-title { font-size: 13px; font-weight: 600; }
+    .toast-msg { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+    @keyframes slideInToast {
+      from { opacity: 0; transform: translateX(40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ============================================
+       MOBILE NAV DRAWER
+    ============================================ */
+    .mobile-nav {
+      position: fixed;
+      top: var(--navbar-h);
+      left: 0; right: 0;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transform: translateY(-100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+    }
+
+    .mobile-nav.open {
+      transform: translateY(0);
+      pointer-events: all;
+    }
+
+    .mobile-nav-link {
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .mobile-nav-link:hover { color: var(--text-primary); background: var(--bg-secondary); }
+    .mobile-nav-link.active { color: var(--accent-lime); background: var(--accent-lime-dim); }
+
+    /* ============================================
+       FOOTER
+    ============================================ */
+    .footer {
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      padding: 48px 24px 32px;
+    }
+
+    .footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 40px;
+    }
+
+    .footer-brand p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin: 12px 0 20px;
+      line-height: 1.65;
+      max-width: 280px;
+    }
+
+    .footer-social { display: flex; gap: 10px; }
+
+    .social-icon {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      cursor: pointer;
+      transition: var(--transition);
+      color: var(--text-secondary);
+    }
+
+    .social-icon:hover { border-color: var(--accent-lime); color: var(--accent-lime); }
+
+    .footer-col h4 {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-primary);
+      margin-bottom: 14px;
+    }
+
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+    .footer-col li { font-size: 14px; color: var(--text-secondary); cursor: pointer; transition: var(--transition); }
+    .footer-col li:hover { color: var(--accent-lime); }
+
+    .footer-bottom {
+      max-width: 1200px;
+      margin: 32px auto 0;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .footer-bottom p { font-size: 13px; color: var(--text-muted); }
+
+    /* ============================================
+       EMPTY STATE
+    ============================================ */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+    }
+
+    .empty-icon { font-size: 48px; margin-bottom: 16px; }
+    .empty-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    .empty-desc { font-size: 14px; color: var(--text-secondary); }
+
+    /* ============================================
+       TABS
+    ============================================ */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+      margin-bottom: 20px;
+      width: fit-content;
+    }
+
+    .tab {
+      padding: 8px 18px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      color: var(--text-muted);
+      border: none;
+      background: transparent;
+    }
+
+    .tab.active { background: var(--bg-card); color: var(--text-primary); box-shadow: 0 1px 4px rgba(0,0,0,0.15); }
+    .tab:hover:not(.active) { color: var(--text-secondary); }
+
+    /* ============================================
+       BADGE
+    ============================================ */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .badge-green { background: rgba(46, 213, 115, 0.15); color: var(--accent-teal); }
+    .badge-orange { background: rgba(255, 107, 53, 0.15); color: var(--accent-orange); }
+    .badge-blue { background: rgba(78, 159, 255, 0.15); color: var(--accent-blue); }
+    .badge-purple { background: rgba(155, 114, 255, 0.15); color: var(--accent-purple); }
+    .badge-lime { background: var(--accent-lime-dim); color: var(--text-accent); }
+
+    /* ============================================
+       DIVIDER
+    ============================================ */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 20px 0;
+    }
+
+    /* ============================================
+       RESPONSIVE
+    ============================================ */
+    @media (max-width: 900px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .workout-grid { grid-template-columns: 1fr; }
+      .nutrition-grid { grid-template-columns: 1fr; }
+      .analytics-grid { grid-template-columns: 1fr; }
+      .footer-inner { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 720px) {
+      .nav-links { display: none; }
+      .hamburger { display: flex; }
+      .hero-title { font-size: 64px; }
+      .hero-stats { gap: 24px; }
+    }
+
+    @media (max-width: 520px) {
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .macro-ring-grid { grid-template-columns: 1fr 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+      .footer-inner { grid-template-columns: 1fr; }
+      .auth-card { padding: 28px 20px; }
+    }
+
+    /* ============================================
+       MISC
+    ============================================ */
+    .tag {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .loading-dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      background: var(--accent-lime);
+      border-radius: 50%;
+      animation: blink 1.2s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; } 50% { opacity: 0.2; }
+    }
+
+    .avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: var(--accent-lime);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: #0a0a0f;
+      flex-shrink: 0;
+    }
+
+    .streak-flame {
+      font-size: 18px;
+      animation: flicker 1.5s ease-in-out infinite alternate;
+    }
+
+    @keyframes flicker {
+      from { transform: scale(1) rotate(-3deg); }
+      to { transform: scale(1.15) rotate(3deg); }
+    }
+
+    .ai-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(155, 114, 255, 0.15);
+      border: 1px solid rgba(155, 114, 255, 0.3);
+      color: var(--accent-purple);
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .dot-separator {
+      width: 3px; height: 3px;
+      background: var(--text-muted);
+      border-radius: 50%;
+    }
+
+    /* Skeleton loader */
+    .skeleton {
+      background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-card-hover) 50%, var(--bg-card) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: var(--radius-sm);
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Notification bell */
+    .notif-btn {
+      position: relative;
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: var(--transition);
+    }
+
+    .notif-btn:hover { color: var(--text-primary); border-color: var(--border-light); }
+
+    .notif-dot {
+      position: absolute;
+      top: 7px; right: 7px;
+      width: 7px; height: 7px;
+      background: var(--accent-red);
+      border-radius: 50%;
+      border: 1.5px solid var(--bg-primary);
+    }
+
+    /* Tag colors for workout types */
+    .tag-cardio { background: rgba(255, 107, 53, 0.15); color: var(--accent-orange); }
+    .tag-strength { background: rgba(78, 159, 255, 0.15); color: var(--accent-blue); }
+    .tag-yoga { background: rgba(155, 114, 255, 0.15); color: var(--accent-purple); }
+    .tag-hiit { background: rgba(255, 71, 87, 0.15); color: var(--accent-red); }
+    .tag-sports { background: rgba(46, 213, 115, 0.15); color: var(--accent-teal); }
+
+    /* Icon bg colors */
+    .icon-bg-lime { background: var(--accent-lime-dim); }
+    .icon-bg-orange { background: rgba(255, 107, 53, 0.15); }
+    .icon-bg-blue { background: rgba(78, 159, 255, 0.15); }
+    .icon-bg-purple { background: rgba(155, 114, 255, 0.15); }
+    .icon-bg-red { background: rgba(255, 71, 87, 0.15); }
+    .icon-bg-teal { background: rgba(46, 213, 115, 0.15); }
+
+    /* Colors */
+    .c-lime { color: var(--accent-lime); }
+    .c-orange { color: var(--accent-orange); }
+    .c-blue { color: var(--accent-blue); }
+    .c-purple { color: var(--accent-purple); }
+    .c-red { color: var(--accent-red); }
+    .c-teal { color: var(--accent-teal); }
+
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback } = React;
+
+    /* ============================================
+       MOCK DATA
+    ============================================ */
+    const WORKOUT_TYPES = [
+      { key: 'cardio', label: 'Cardio', icon: '🏃', color: 'orange' },
+      { key: 'strength', label: 'Strength', icon: '🏋️', color: 'blue' },
+      { key: 'yoga', label: 'Yoga', icon: '🧘', color: 'purple' },
+      { key: 'hiit', label: 'HIIT', icon: '⚡', color: 'red' },
+      { key: 'sports', label: 'Sports', icon: '⚽', color: 'teal' },
+      { key: 'cycling', label: 'Cycling', icon: '🚴', color: 'lime' },
+    ];
+
+    const MEAL_ICONS = { breakfast: '🌅', lunch: '☀️', dinner: '🌙', snack: '🍎' };
+
+    const AI_SUGGESTIONS = [
+      { title: "Try a 20-min HIIT session", desc: "Based on your rest day pattern, a short HIIT session can boost your metabolism today.", icon: "⚡" },
+      { title: "Increase protein intake", desc: "Your muscle recovery would benefit from +30g protein. Consider a post-workout shake.", icon: "💪" },
+      { title: "Active recovery walk", desc: "You've had 3 intense sessions. A 30-min walk aids recovery without overtraining.", icon: "🚶" },
+      { title: "Hydration reminder", desc: "You're at 60% of your daily water goal. Staying hydrated improves performance by 15%.", icon: "💧" },
+    ];
+
+    const ACHIEVEMENTS = [
+      { id: 1, icon: "🔥", name: "7-Day Streak", desc: "Log workouts 7 days straight", unlocked: true },
+      { id: 2, icon: "💯", name: "100 Workouts", desc: "Complete 100 workout sessions", unlocked: true },
+      { id: 3, icon: "🏆", name: "Goal Crusher", desc: "Hit your weekly goal 4 weeks", unlocked: true },
+      { id: 4, icon: "⚡", name: "HIIT Master", desc: "Complete 20 HIIT sessions", unlocked: false },
+      { id: 5, icon: "🥗", name: "Clean Eater", desc: "Log meals for 14 days straight", unlocked: false },
+      { id: 6, icon: "🌅", name: "Early Bird", desc: "Log 10 morning workouts", unlocked: false },
+    ];
+
+    const CHALLENGES = [
+      { id: 1, icon: "🏃", title: "30-Day Run Challenge", subtitle: "Run at least 2km every day for 30 days", progress: 14, total: 30, reward: "+500 XP", color: "orange" },
+      { id: 2, icon: "💧", title: "Hydration Hero", subtitle: "Drink 8 glasses of water daily for 2 weeks", progress: 9, total: 14, reward: "+250 XP", color: "blue" },
+      { id: 3, icon: "🧘", title: "Flexibility Week", subtitle: "Complete 7 yoga/stretching sessions", progress: 3, total: 7, reward: "+200 XP", color: "purple" },
+    ];
+
+    /* ============================================
+       UTILITY HOOKS
+    ============================================ */
+    function useLocalStorage(key, initial) {
+      const [val, setVal] = useState(() => {
+        try {
+          const stored = localStorage.getItem(key);
+          return stored ? JSON.parse(stored) : initial;
+        } catch { return initial; }
+      });
+
+      const setStored = useCallback((v) => {
+        const next = typeof v === 'function' ? v(val) : v;
+        setVal(next);
+        try { localStorage.setItem(key, JSON.stringify(next)); } catch {}
+      }, [key, val]);
+
+      return [val, setStored];
+    }
+
+    /* ============================================
+       TOAST SYSTEM
+    ============================================ */
+    function ToastContainer({ toasts, remove }) {
+      return (
+        <div className="toast-container">
+          {toasts.map(t => (
+            <div key={t.id} className={`toast ${t.type}`}>
+              <span className="toast-icon">{t.type === 'success' ? '✅' : t.type === 'error' ? '❌' : 'ℹ️'}</span>
+              <div className="toast-text">
+                <div className="toast-title">{t.title}</div>
+                {t.msg && <div className="toast-msg">{t.msg}</div>}
+              </div>
+              <span style={{cursor:'pointer',color:'var(--text-muted)',fontSize:14,marginLeft:'auto'}} onClick={() => remove(t.id)}>✕</span>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    function useToasts() {
+      const [toasts, setToasts] = useState([]);
+
+      const add = useCallback((type, title, msg) => {
+        const id = Date.now();
+        setToasts(prev => [...prev, { id, type, title, msg }]);
+        setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3500);
+      }, []);
+
+      const remove = useCallback((id) => setToasts(prev => prev.filter(t => t.id !== id)), []);
+
+      return { toasts, add, remove };
+    }
+
+    /* ============================================
+       CIRCULAR PROGRESS SVG
+    ============================================ */
+    function CircularProgress({ pct, size = 80, stroke = 6, color = 'var(--accent-lime)', children }) {
+      const r = (size - stroke) / 2;
+      const circ = 2 * Math.PI * r;
+      const offset = circ - (pct / 100) * circ;
+      return (
+        <div className="ring-wrap" style={{ width: size, height: size }}>
+          <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+            <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--bg-secondary)" strokeWidth={stroke} />
+            <circle
+              cx={size/2} cy={size/2} r={r}
+              fill="none" stroke={color} strokeWidth={stroke}
+              strokeDasharray={circ}
+              strokeDashoffset={offset}
+              strokeLinecap="round"
+              transform={`rotate(-90 ${size/2} ${size/2})`}
+              style={{ transition: 'stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1)' }}
+            />
+          </svg>
+          <div className="ring-label">{children}</div>
+        </div>
+      );
+    }
+
+    /* ============================================
+       CHART COMPONENTS
+    ============================================ */
+    function WeeklyChart({ workouts }) {
+      const canvasRef = useRef();
+      const chartRef = useRef();
+
+      useEffect(() => {
+        if (!canvasRef.current) return;
+        if (chartRef.current) chartRef.current.destroy();
+
+        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        const data = days.map((_, i) => {
+          const d = workouts.filter(w => {
+            const wd = new Date(w.date).getDay();
+            return wd === (i + 1) % 7;
+          });
+          return d.reduce((s, w) => s + parseInt(w.calories || 0), 0);
+        });
+
+        chartRef.current = new Chart(canvasRef.current, {
+          type: 'bar',
+          data: {
+            labels: days,
+            datasets: [{
+              data,
+              backgroundColor: 'rgba(200, 245, 66, 0.25)',
+              borderColor: '#c8f542',
+              borderWidth: 2,
+              borderRadius: 6,
+              hoverBackgroundColor: 'rgba(200, 245, 66, 0.45)',
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: {
+              backgroundColor: '#16161f',
+              borderColor: '#2a2a3a',
+              borderWidth: 1,
+              titleColor: '#f0f0f5',
+              bodyColor: '#8888a0',
+              callbacks: { label: ctx => `${ctx.raw} kcal` }
+            }},
+            scales: {
+              x: { grid: { display: false }, ticks: { color: '#8888a0', font: { size: 11 } }, border: { display: false } },
+              y: { grid: { color: '#2a2a3a' }, ticks: { color: '#8888a0', font: { size: 11 } }, border: { display: false } }
+            }
+          }
+        });
+
+        return () => { if (chartRef.current) chartRef.current.destroy(); };
+      }, [workouts]);
+
+      return <canvas ref={canvasRef} />;
+    }
+
+    function CalorieLineChart({ meals }) {
+      const canvasRef = useRef();
+      const chartRef = useRef();
+
+      useEffect(() => {
+        if (!canvasRef.current) return;
+        if (chartRef.current) chartRef.current.destroy();
+
+        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        const consumed = days.map(() => Math.floor(1400 + Math.random() * 700));
+        const goal = days.map(() => 2000);
+
+        chartRef.current = new Chart(canvasRef.current, {
+          type: 'line',
+          data: {
+            labels: days,
+            datasets: [
+              {
+                label: 'Consumed',
+                data: consumed,
+                borderColor: '#ff6b35',
+                backgroundColor: 'rgba(255,107,53,0.08)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#ff6b35',
+                pointRadius: 4,
+              },
+              {
+                label: 'Goal',
+                data: goal,
+                borderColor: 'rgba(200,245,66,0.5)',
+                borderWidth: 2,
+                borderDash: [6, 4],
+                fill: false,
+                tension: 0,
+                pointRadius: 0,
+              }
+            ]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+              legend: { display: true, labels: { color: '#8888a0', font: { size: 11 }, boxWidth: 12 } },
+              tooltip: {
+                backgroundColor: '#16161f', borderColor: '#2a2a3a', borderWidth: 1,
+                titleColor: '#f0f0f5', bodyColor: '#8888a0',
+              }
+            },
+            scales: {
+              x: { grid: { display: false }, ticks: { color: '#8888a0', font: { size: 11 } }, border: { display: false } },
+              y: { grid: { color: '#2a2a3a' }, ticks: { color: '#8888a0', font: { size: 11 } }, border: { display: false } }
+            }
+          }
+        });
+
+        return () => { if (chartRef.current) chartRef.current.destroy(); };
+      }, [meals]);
+
+      return <canvas ref={canvasRef} />;
+    }
+
+    function MacroDonutChart({ carbs, protein, fat }) {
+      const canvasRef = useRef();
+      const chartRef = useRef();
+
+      useEffect(() => {
+        if (!canvasRef.current) return;
+        if (chartRef.current) chartRef.current.destroy();
+
+        chartRef.current = new Chart(canvasRef.current, {
+          type: 'doughnut',
+          data: {
+            labels: ['Carbs', 'Protein', 'Fat'],
+            datasets: [{
+              data: [carbs || 1, protein || 1, fat || 1],
+              backgroundColor: ['rgba(200,245,66,0.8)', 'rgba(78,159,255,0.8)', 'rgba(255,107,53,0.8)'],
+              borderWidth: 0,
+              hoverOffset: 4,
+            }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+              legend: { position: 'bottom', labels: { color: '#8888a0', font: { size: 11 }, boxWidth: 10, padding: 14 } },
+              tooltip: {
+                backgroundColor: '#16161f', borderColor: '#2a2a3a', borderWidth: 1,
+                titleColor: '#f0f0f5', bodyColor: '#8888a0',
+                callbacks: { label: ctx => `${ctx.label}: ${ctx.raw}g` }
+              }
+            }
+          }
+        });
+
+        return () => { if (chartRef.current) chartRef.current.destroy(); };
+      }, [carbs, protein, fat]);
+
+      return <canvas ref={canvasRef} />;
+    }
+
+    function WeightLineChart() {
+      const canvasRef = useRef();
+      const chartRef = useRef();
+
+      useEffect(() => {
+        if (!canvasRef.current) return;
+        if (chartRef.current) chartRef.current.destroy();
+
+        chartRef.current = new Chart(canvasRef.current, {
+          type: 'line',
+          data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+            datasets: [{
+              label: 'Weight (kg)',
+              data: [82, 80.5, 79, 78, 77.5, 76.8, 76],
+              borderColor: '#9b72ff',
+              backgroundColor: 'rgba(155,114,255,0.1)',
+              borderWidth: 2.5,
+              fill: true,
+              tension: 0.4,
+              pointBackgroundColor: '#9b72ff',
+              pointRadius: 5,
+              pointHoverRadius: 7,
+            }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: '#16161f', borderColor: '#2a2a3a', borderWidth: 1,
+                titleColor: '#f0f0f5', bodyColor: '#8888a0',
+                callbacks: { label: ctx => `${ctx.raw} kg` }
+              }
+            },
+            scales: {
+              x: { grid: { display: false }, ticks: { color: '#8888a0', font: { size: 11 } }, border: { display: false } },
+              y: { grid: { color: '#2a2a3a' }, ticks: { color: '#8888a0', font: { size: 11 }, callback: v => `${v} kg` }, border: { display: false } }
+            }
+          }
+        });
+
+        return () => { if (chartRef.current) chartRef.current.destroy(); };
+      }, []);
+
+      return <canvas ref={canvasRef} />;
+    }
+
+    /* ============================================
+       NAVBAR
+    ============================================ */
+    function Navbar({ page, setPage, theme, toggleTheme, user, setUser }) {
+      const [mobileOpen, setMobileOpen] = useState(false);
+      const navLinks = ['Home', 'Dashboard', 'Workouts', 'Nutrition', 'Progress'];
+
+      return (
+        <>
+          <nav className="navbar">
+            <div className="navbar-inner">
+              <div className="logo" onClick={() => setPage('Home')}>
+                <div className="logo-icon">⚡</div>
+                <span className="logo-text">FIT<span>TRACK</span></span>
+              </div>
+
+              <ul className="nav-links">
+                {navLinks.map(n => (
+                  <li key={n} className={`nav-link ${page === n ? 'active' : ''}`} onClick={() => setPage(n)}>{n}</li>
+                ))}
+              </ul>
+
+              <div className="nav-actions">
+                <button className="theme-toggle" onClick={toggleTheme} title="Toggle theme">
+                  {theme === 'dark' ? '☀️' : '🌙'}
+                </button>
+                <button className="notif-btn" title="Notifications">
+                  🔔<span className="notif-dot"></span>
+                </button>
+                {user ? (
+                  <div style={{display:'flex',alignItems:'center',gap:10}}>
+                    <div className="avatar" title={user.name}>{user.name[0].toUpperCase()}</div>
+                    <button className="btn btn-ghost btn-sm" onClick={() => setUser(null)}>Sign out</button>
+                  </div>
+                ) : (
+                  <button className="btn btn-primary btn-sm" onClick={() => setPage('Auth')}>Get Started</button>
+                )}
+                <button className="hamburger" onClick={() => setMobileOpen(o => !o)}>
+                  <span></span><span></span><span></span>
+                </button>
+              </div>
+            </div>
+          </nav>
+
+          <div className={`mobile-nav ${mobileOpen ? 'open' : ''}`}>
+            {navLinks.map(n => (
+              <div key={n} className={`mobile-nav-link ${page === n ? 'active' : ''}`}
+                onClick={() => { setPage(n); setMobileOpen(false); }}>
+                {n}
+              </div>
+            ))}
+            {!user && (
+              <button className="btn btn-primary" style={{marginTop:8}} onClick={() => { setPage('Auth'); setMobileOpen(false); }}>
+                Get Started Free
+              </button>
+            )}
+          </div>
+        </>
+      );
+    }
+
+    /* ============================================
+       FOOTER
+    ============================================ */
+    function Footer({ setPage }) {
+      return (
+        <footer className="footer">
+          <div className="footer-inner">
+            <div className="footer-brand">
+              <div className="logo" style={{cursor:'default'}}>
+                <div className="logo-icon">⚡</div>
+                <span className="logo-text">FIT<span>TRACK</span></span>
+              </div>
+              <p>Your all-in-one fitness companion. Track, improve, and crush your goals every single day.</p>
+              <div className="footer-social">
+                {['𝕏', '📘', '📸', '▶️'].map((s, i) => (
+                  <div key={i} className="social-icon">{s}</div>
+                ))}
+              </div>
+            </div>
+
+            <div className="footer-col">
+              <h4>Product</h4>
+              <ul>
+                <li onClick={() => setPage('Dashboard')}>Dashboard</li>
+                <li onClick={() => setPage('Workouts')}>Workouts</li>
+                <li onClick={() => setPage('Nutrition')}>Nutrition</li>
+                <li onClick={() => setPage('Progress')}>Analytics</li>
+              </ul>
+            </div>
+
+            <div className="footer-col">
+              <h4>Support</h4>
+              <ul>
+                <li>Help Center</li>
+                <li>Community</li>
+                <li>Blog</li>
+                <li>Contact Us</li>
+              </ul>
+            </div>
+
+            <div className="footer-col">
+              <h4>Legal</h4>
+              <ul>
+                <li>Privacy Policy</li>
+                <li>Terms of Service</li>
+                <li>Cookie Policy</li>
+                <li>GDPR</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="footer-bottom">
+            <p>© 2025 FitTrack Pro. Built for athletes, by athletes.</p>
+            <p style={{fontFamily:'var(--font-mono)',fontSize:12}}>v2.4.1</p>
+          </div>
+        </footer>
+      );
+    }
+
+    /* ============================================
+       HOME PAGE
+    ============================================ */
+    function HomePage({ setPage, user }) {
+      const features = [
+        { icon: '📊', title: 'Smart Analytics', desc: 'Visual charts and weekly breakdowns keep your progress crystal clear.', bg: 'icon-bg-lime', color: 'c-lime' },
+        { icon: '🏋️', title: 'Workout Library', desc: 'Hundreds of exercises across all categories from beginner to advanced.', bg: 'icon-bg-blue', color: 'c-blue' },
+        { icon: '🥗', title: 'Nutrition Log', desc: 'Track macros, calories, and build healthy eating habits effortlessly.', bg: 'icon-bg-orange', color: 'c-orange' },
+        { icon: '🎯', title: 'Goal Setting', desc: 'Set SMART fitness goals and track every milestone on your journey.', bg: 'icon-bg-purple', color: 'c-purple' },
+        { icon: '🤖', title: 'AI Suggestions', desc: 'Personalized workout recommendations powered by your training history.', bg: 'icon-bg-red', color: 'c-red' },
+        { icon: '🏆', title: 'Challenges', desc: 'Stay motivated with daily challenges, streaks, and achievement badges.', bg: 'icon-bg-teal', color: 'c-teal' },
+      ];
+
+      const steps = [
+        { icon: '✍️', title: 'Create Account', desc: 'Sign up free in under 60 seconds. No credit card required.' },
+        { icon: '🎯', title: 'Set Your Goals', desc: 'Tell us what you want to achieve — weight loss, muscle gain, endurance.' },
+        { icon: '📝', title: 'Log Activities', desc: 'Track workouts and meals with our lightning-fast logging interface.' },
+        { icon: '📈', title: 'Watch Progress', desc: 'See your transformation through beautiful charts and analytics.' },
+      ];
+
+      return (
+        <div className="page">
+          {/* HERO */}
+          <section className="hero">
+            <div className="hero-bg">
+              <div className="hero-orb hero-orb-1"></div>
+              <div className="hero-orb hero-orb-2"></div>
+              <div className="hero-orb hero-orb-3"></div>
+            </div>
+
+            <div className="hero-badge">
+              <span className="dot"></span>
+              NOW WITH AI-POWERED SUGGESTIONS
+            </div>
+
+            <h1 className="hero-title">
+              TRACK.<br />
+              <span className="highlight">IMPROVE.</span><br />
+              DOMINATE.
+            </h1>
+
+            <p className="hero-subtitle">
+              FitTrack Pro is the all-in-one fitness platform for students and young professionals. Log workouts, monitor nutrition, and crush your goals.
+            </p>
+
+            <div className="hero-cta">
+              <button className="btn btn-primary btn-lg" onClick={() => setPage(user ? 'Dashboard' : 'Auth')}>
+                🚀 {user ? 'Go to Dashboard' : 'Start for Free'}
+              </button>
+              <button className="btn btn-outline btn-lg" onClick={() => setPage('Progress')}>
+                📊 See Demo
+              </button>
+            </div>
+
+            <div className="hero-stats">
+              {[
+                { num: '50K+', label: 'Active Users' },
+                { num: '2M+', label: 'Workouts Logged' },
+                { num: '98%', label: 'Satisfaction Rate' },
+                { num: '4.9★', label: 'App Rating' },
+              ].map(s => (
+                <div key={s.label} className="hero-stat">
+                  <div className="hero-stat-num">{s.num}</div>
+                  <div className="hero-stat-label">{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* FEATURES */}
+          <section className="section" style={{maxWidth:1200,margin:'0 auto'}}>
+            <span className="section-label">Why FitTrack Pro</span>
+            <h2 className="section-title">Everything you need,<br />nothing you don't.</h2>
+            <p className="section-desc">A complete fitness ecosystem that adapts to your unique journey from day one.</p>
+
+            <div className="features-grid">
+              {features.map(f => (
+                <div key={f.title} className="feature-card">
+                  <div className={`feature-icon ${f.bg}`}>
+                    <span className={f.color}>{f.icon}</span>
+                  </div>
+                  <h3>{f.title}</h3>
+                  <p>{f.desc}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* HOW IT WORKS */}
+          <section className="section" style={{maxWidth:1200,margin:'0 auto'}}>
+            <span className="section-label">How It Works</span>
+            <h2 className="section-title">Up and running<br />in minutes.</h2>
+
+            <div className="steps-grid">
+              {steps.map((s, i) => (
+                <div key={s.title} className="step-card">
+                  <div className="step-num">{String(i+1).padStart(2,'0')}</div>
+                  <div style={{fontSize:24,marginBottom:12}}>{s.icon}</div>
+                  <h3>{s.title}</h3>
+                  <p>{s.desc}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* CTA BANNER */}
+          <div style={{maxWidth:1200,margin:'0 auto',padding:'0 24px'}}>
+            <div className="cta-banner">
+              <h2>READY TO GET FIT?</h2>
+              <p>Join 50,000+ users already transforming their fitness with FitTrack Pro.</p>
+              <button className="btn btn-lg" onClick={() => setPage(user ? 'Dashboard' : 'Auth')}>
+                {user ? '→ Go to Dashboard' : '→ Start Free Today'}
+              </button>
+            </div>
+          </div>
+
+          <Footer setPage={setPage} />
+        </div>
+      );
+    }
+
+    /* ============================================
+       DASHBOARD
+    ============================================ */
+    function DashboardPage({ workouts, meals, user, addToast, setPage }) {
+      const [waterCups, setWaterCups] = useLocalStorage('water_cups', 3);
+
+      const todayWorkouts = workouts.filter(w => {
+        const d = new Date(w.date);
+        const today = new Date();
+        return d.toDateString() === today.toDateString();
+      });
+
+      const totalCalBurned = todayWorkouts.reduce((s, w) => s + parseInt(w.calories || 0), 0);
+      const totalCalConsumed = meals.reduce((s, m) => s + parseInt(m.calories || 0), 0);
+      const calorieGoal = 2000;
+      const burnGoal = 500;
+      const weeklyWorkoutGoal = 5;
+      const weeklyWorkouts = workouts.slice(0, 5).length;
+
+      const recentActivity = [...workouts].reverse().slice(0, 4);
+      const typeInfo = (type) => WORKOUT_TYPES.find(t => t.key === type) || WORKOUT_TYPES[0];
+
+      const handleWaterClick = (i) => {
+        const next = waterCups === i + 1 ? i : i + 1;
+        setWaterCups(next);
+        if (next > waterCups) addToast('info', '💧 Water logged', `${next}/8 glasses today`);
+      };
+
+      return (
+        <div className="page">
+          <div className="dashboard">
+            <div className="page-header" style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:16}}>
+              <div>
+                <h1>Good morning, <span className="greeting-name">{user?.name || 'Athlete'}</span> 👋</h1>
+                <p>You're on a <span className="streak-flame">🔥</span> <strong style={{color:'var(--accent-lime)'}}>7-day streak</strong> — keep it going!</p>
+              </div>
+              <div style={{display:'flex',gap:10}}>
+                <button className="btn btn-outline btn-sm" onClick={() => setPage('Workouts')}>+ Log Workout</button>
+                <button className="btn btn-primary btn-sm" onClick={() => setPage('Nutrition')}>+ Log Meal</button>
+              </div>
+            </div>
+
+            {/* Stat Cards */}
+            <div className="stats-grid">
+              <div className="stat-card">
+                <div className="stat-card-header">
+                  <span className="stat-label">Calories Burned</span>
+                  <div className="stat-icon icon-bg-lime"><span className="c-lime">🔥</span></div>
+                </div>
+                <div className="stat-value c-lime">{totalCalBurned}</div>
+                <div className="stat-meta">
+                  Goal: {burnGoal} kcal &nbsp;
+                  <span className={`stat-change ${totalCalBurned >= burnGoal ? 'up' : 'down'}`}>
+                    {totalCalBurned >= burnGoal ? '↑ Met!' : `${burnGoal - totalCalBurned} left`}
+                  </span>
+                </div>
+              </div>
+
+              <div className="stat-card">
+                <div className="stat-card-header">
+                  <span className="stat-label">Calories Consumed</span>
+                  <div className="stat-icon icon-bg-orange"><span className="c-orange">🍽️</span></div>
+                </div>
+                <div className="stat-value c-orange">{totalCalConsumed}</div>
+                <div className="stat-meta">
+                  Goal: {calorieGoal} kcal &nbsp;
+                  <span className={`stat-change ${totalCalConsumed <= calorieGoal ? 'up' : 'down'}`}>
+                    {totalCalConsumed <= calorieGoal ? `${calorieGoal - totalCalConsumed} left` : `+${totalCalConsumed - calorieGoal} over`}
+                  </span>
+                </div>
+              </div>
+
+              <div className="stat-card">
+                <div className="stat-card-header">
+                  <span className="stat-label">This Week</span>
+                  <div className="stat-icon icon-bg-blue"><span className="c-blue">🏋️</span></div>
+                </div>
+                <div className="stat-value c-blue">{weeklyWorkouts}</div>
+                <div className="stat-meta">
+                  Goal: {weeklyWorkoutGoal} workouts &nbsp;
+                  <span className="stat-change up">↑ On track</span>
+                </div>
+              </div>
+
+              <div className="stat-card">
+                <div className="stat-card-header">
+                  <span className="stat-label">Active Minutes</span>
+                  <div className="stat-icon icon-bg-purple"><span className="c-purple">⏱️</span></div>
+                </div>
+                <div className="stat-value c-purple">
+                  {todayWorkouts.reduce((s, w) => s + parseInt(w.duration || 0), 0)}
+                </div>
+                <div className="stat-meta">
+                  Goal: 60 min &nbsp;
+                  <span className="stat-change up">↑ Active</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Main grid */}
+            <div className="dashboard-grid">
+              {/* Weekly calories chart */}
+              <div className="card">
+                <div className="card-header">
+                  <div>
+                    <div className="card-title">Weekly Calories Burned</div>
+                    <div className="card-subtitle">Calories burned per workout session</div>
+                  </div>
+                  <span className="badge badge-lime">This Week</span>
+                </div>
+                <div className="chart-wrap">
+                  <WeeklyChart workouts={workouts} />
+                </div>
+              </div>
+
+              {/* Goal progress + water */}
+              <div style={{display:'flex',flexDirection:'column',gap:20}}>
+                {/* Goal rings */}
+                <div className="card">
+                  <div className="card-header">
+                    <div className="card-title">Daily Goals</div>
+                  </div>
+
+                  <div className="progress-ring">
+                    <CircularProgress pct={Math.min(100, Math.round(totalCalBurned/burnGoal*100))} size={88} color="var(--accent-lime)">
+                      <div className="ring-pct">{Math.min(100, Math.round(totalCalBurned/burnGoal*100))}%</div>
+                      <div className="ring-desc">Burn</div>
+                    </CircularProgress>
+                    <div className="ring-info">
+                      <h4>Calorie Burn Goal</h4>
+                      <p>{totalCalBurned} / {burnGoal} kcal<br />
+                        {totalCalBurned >= burnGoal ? '🎉 Goal reached!' : `${burnGoal - totalCalBurned} kcal remaining`}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="progress-ring" style={{marginTop:4}}>
+                    <CircularProgress pct={Math.min(100, Math.round(totalCalConsumed/calorieGoal*100))} size={88} color="var(--accent-orange)">
+                      <div className="ring-pct" style={{color:'var(--accent-orange)'}}>{Math.min(100,Math.round(totalCalConsumed/calorieGoal*100))}%</div>
+                      <div className="ring-desc">Intake</div>
+                    </CircularProgress>
+                    <div className="ring-info">
+                      <h4>Calorie Intake Goal</h4>
+                      <p>{totalCalConsumed} / {calorieGoal} kcal<br />
+                        {calorieGoal - totalCalConsumed > 0
+                          ? `${calorieGoal - totalCalConsumed} kcal left`
+                          : `${totalCalConsumed - calorieGoal} kcal over goal`}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Water */}
+                <div className="card">
+                  <div className="card-header">
+                    <div className="card-title">💧 Water Intake</div>
+                  </div>
+                  <div className="water-tracker">
+                    <div className="water-info">
+                      <div className="water-val">{waterCups}L</div>
+                      <div className="water-goal">Goal: 8 glasses</div>
+                    </div>
+                    <div className="water-cups">
+                      {[...Array(8)].map((_, i) => (
+                        <button key={i} className={`water-cup ${i < waterCups ? 'filled' : ''}`}
+                          onClick={() => handleWaterClick(i)}>
+                          💧
+                        </button>
+                      ))}
+                    </div>
+                    <div className="progress-bar-wrap">
+                      <div className="progress-bar">
+                        <div className="progress-bar-fill" style={{width:`${waterCups/8*100}%`,background:'var(--accent-blue)'}} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent activity + AI suggestions */}
+            <div className="dashboard-grid">
+              <div className="card">
+                <div className="card-header">
+                  <div>
+                    <div className="card-title">Recent Activity</div>
+                    <div className="card-subtitle">Your latest workout sessions</div>
+                  </div>
+                  <button className="btn btn-ghost btn-sm" onClick={() => setPage('Workouts')}>View all →</button>
+                </div>
+
+                {recentActivity.length === 0 ? (
+                  <div className="empty-state">
+                    <div className="empty-icon">🏃</div>
+                    <div className="empty-title">No workouts yet</div>
+                    <div className="empty-desc">Log your first workout to see it here!</div>
+                  </div>
+                ) : (
+                  <ul className="activity-list">
+                    {recentActivity.map(w => {
+                      const ti = typeInfo(w.type);
+                      return (
+                        <li key={w.id} className="activity-item">
+                          <div className={`activity-icon icon-bg-${ti.color}`}>{ti.icon}</div>
+                          <div className="activity-info">
+                            <div className="activity-name">{w.name}</div>
+                            <div className="activity-time">{w.duration} min · {new Date(w.date).toLocaleDateString()}</div>
+                          </div>
+                          <div className="activity-cal">🔥 {w.calories}</div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+
+              <div className="card">
+                <div className="card-header">
+                  <div>
+                    <div className="card-title">AI Suggestions</div>
+                    <div className="card-subtitle">Personalized for you</div>
+                  </div>
+                  <span className="ai-badge">✨ AI</span>
+                </div>
+
+                <div className="ai-suggestions">
+                  {AI_SUGGESTIONS.slice(0, 3).map((s, i) => (
+                    <div key={i} className="ai-suggestion-card">
+                      <div className="ai-icon">{s.icon}</div>
+                      <div className="ai-suggestion-text">
+                        <h4>{s.title}</h4>
+                        <p>{s.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ============================================
+       WORKOUT TRACKER
+    ============================================ */
+    function WorkoutsPage({ workouts, setWorkouts, addToast }) {
+      const [form, setForm] = useState({ name: '', type: 'cardio', duration: '', calories: '', notes: '', date: new Date().toISOString().split('T')[0] });
+      const [search, setSearch] = useState('');
+      const [filterType, setFilterType] = useState('all');
+      const [editId, setEditId] = useState(null);
+
+      const filtered = workouts.filter(w => {
+        const matchSearch = w.name.toLowerCase().includes(search.toLowerCase());
+        const matchType = filterType === 'all' || w.type === filterType;
+        return matchSearch && matchType;
+      });
+
+      const handleSubmit = () => {
+        if (!form.name || !form.duration || !form.calories) {
+          addToast('error', 'Missing fields', 'Please fill in workout name, duration, and calories.');
+          return;
+        }
+        if (editId) {
+          setWorkouts(prev => prev.map(w => w.id === editId ? { ...form, id: editId } : w));
+          addToast('success', '✏️ Workout updated', `"${form.name}" has been updated.`);
+          setEditId(null);
+        } else {
+          const newW = { ...form, id: Date.now() };
+          setWorkouts(prev => [newW, ...prev]);
+          addToast('success', '💪 Workout logged!', `"${form.name}" — ${form.calories} kcal burned.`);
+        }
+        setForm({ name: '', type: 'cardio', duration: '', calories: '', notes: '', date: new Date().toISOString().split('T')[0] });
+      };
+
+      const handleEdit = (w) => {
+        setForm({ name: w.name, type: w.type, duration: w.duration, calories: w.calories, notes: w.notes || '', date: w.date });
+        setEditId(w.id);
+      };
+
+      const handleDelete = (id, name) => {
+        setWorkouts(prev => prev.filter(w => w.id !== id));
+        addToast('info', '🗑️ Deleted', `"${name}" removed.`);
+        if (editId === id) { setEditId(null); setForm({ name: '', type: 'cardio', duration: '', calories: '', notes: '', date: new Date().toISOString().split('T')[0] }); }
+      };
+
+      const typeInfo = (type) => WORKOUT_TYPES.find(t => t.key === type) || WORKOUT_TYPES[0];
+
+      return (
+        <div className="page">
+          <div className="dashboard">
+            <div className="page-header">
+              <h1>Workout <span style={{color:'var(--accent-lime)'}}>Tracker</span></h1>
+              <p>Log and manage all your training sessions.</p>
+            </div>
+
+            <div className="workout-grid">
+              {/* Workout list */}
+              <div>
+                <div className="filter-bar">
+                  <div className="search-input-wrap">
+                    <span className="search-icon">🔍</span>
+                    <input className="search-input" placeholder="Search workouts..."
+                      value={search} onChange={e => setSearch(e.target.value)} />
+                  </div>
+                  <select className="form-control" style={{width:'auto',flexShrink:0}}
+                    value={filterType} onChange={e => setFilterType(e.target.value)}>
+                    <option value="all">All Types</option>
+                    {WORKOUT_TYPES.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
+                  </select>
+                </div>
+
+                {filtered.length === 0 ? (
+                  <div className="empty-state" style={{background:'var(--bg-card)',border:'1px solid var(--border)',borderRadius:'var(--radius-lg)'}}>
+                    <div className="empty-icon">🏃</div>
+                    <div className="empty-title">{search || filterType !== 'all' ? 'No matches found' : 'No workouts yet'}</div>
+                    <div className="empty-desc">Use the form to add your first workout!</div>
+                  </div>
+                ) : (
+                  <div className="workouts-list">
+                    {filtered.map(w => {
+                      const ti = typeInfo(w.type);
+                      return (
+                        <div key={w.id} className="workout-card">
+                          <div className={`workout-type-icon icon-bg-${ti.color}`}>{ti.icon}</div>
+                          <div className="workout-info">
+                            <div className="workout-name">{w.name}</div>
+                            <div className="workout-meta">
+                              <span className={`tag tag-${w.type}`}>{ti.label}</span>
+                              <span>📅 {new Date(w.date).toLocaleDateString()}</span>
+                            </div>
+                            {w.notes && <div style={{fontSize:12,color:'var(--text-muted)',marginTop:4}}>{w.notes}</div>}
+                          </div>
+                          <div className="workout-stats">
+                            <div>
+                              <div className="w-stat-val c-blue">{w.duration}</div>
+                              <div className="w-stat-label">min</div>
+                            </div>
+                            <div>
+                              <div className="w-stat-val c-lime">{w.calories}</div>
+                              <div className="w-stat-label">kcal</div>
+                            </div>
+                          </div>
+                          <div className="workout-actions">
+                            <button className="btn btn-ghost btn-sm" onClick={() => handleEdit(w)}>✏️</button>
+                            <button className="btn btn-ghost btn-sm" style={{color:'var(--accent-red)'}} onClick={() => handleDelete(w.id, w.name)}>🗑️</button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Form */}
+              <div className="workout-form-card">
+                <div className="card-header" style={{marginBottom:20}}>
+                  <div>
+                    <div className="card-title">{editId ? '✏️ Edit Workout' : '+ Log Workout'}</div>
+                    <div className="card-subtitle">Fill in the details below</div>
+                  </div>
+                  {editId && (
+                    <button className="btn btn-ghost btn-sm" onClick={() => { setEditId(null); setForm({ name:'',type:'cardio',duration:'',calories:'',notes:'',date:new Date().toISOString().split('T')[0] }); }}>
+                      ✕ Cancel
+                    </button>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Workout Type</label>
+                  <div className="type-chips">
+                    {WORKOUT_TYPES.map(t => (
+                      <button key={t.key} className={`type-chip ${form.type === t.key ? 'selected' : ''}`}
+                        onClick={() => setForm(f => ({ ...f, type: t.key }))}>
+                        {t.icon} {t.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Exercise Name</label>
+                  <input className="form-control" placeholder="e.g. Morning Run, Push Day..."
+                    value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">Duration (min)</label>
+                    <input className="form-control" type="number" placeholder="45"
+                      value={form.duration} onChange={e => setForm(f => ({ ...f, duration: e.target.value }))} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Calories (kcal)</label>
+                    <input className="form-control" type="number" placeholder="320"
+                      value={form.calories} onChange={e => setForm(f => ({ ...f, calories: e.target.value }))} />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Date</label>
+                  <input className="form-control" type="date"
+                    value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Notes (optional)</label>
+                  <textarea className="form-control" rows={3} placeholder="How did it go?"
+                    value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+                    style={{resize:'vertical'}} />
+                </div>
+
+                <button className="btn btn-primary w-full" onClick={handleSubmit}>
+                  {editId ? '✅ Save Changes' : '💪 Log Workout'}
+                </button>
+
+                {/* Quick tips */}
+                <div className="divider" />
+                <div style={{background:'var(--bg-secondary)',borderRadius:'var(--radius-sm)',padding:'14px'}}>
+                  <div style={{fontSize:11,fontWeight:700,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.5px',marginBottom:8}}>💡 Quick Tips</div>
+                  <div style={{fontSize:12,color:'var(--text-secondary)',lineHeight:1.6}}>
+                    • Aim for 150 min moderate cardio/week<br/>
+                    • Include strength training 2x/week<br/>
+                    • Rest days are equally important!
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ============================================
+       NUTRITION TRACKER
+    ============================================ */
+    function NutritionPage({ meals, setMeals, addToast }) {
+      const [form, setForm] = useState({ name: '', mealType: 'breakfast', calories: '', protein: '', carbs: '', fat: '', time: '' });
+      const [tab, setTab] = useState('log');
+
+      const totalCal = meals.reduce((s, m) => s + parseInt(m.calories || 0), 0);
+      const totalProtein = meals.reduce((s, m) => s + parseInt(m.protein || 0), 0);
+      const totalCarbs = meals.reduce((s, m) => s + parseInt(m.carbs || 0), 0);
+      const totalFat = meals.reduce((s, m) => s + parseInt(m.fat || 0), 0);
+      const calGoal = 2000;
+      const remaining = calGoal - totalCal;
+
+      const handleAddMeal = () => {
+        if (!form.name || !form.calories) {
+          addToast('error', 'Missing fields', 'Please enter meal name and calories.');
+          return;
+        }
+        const newM = { ...form, id: Date.now(), time: form.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
+        setMeals(prev => [newM, ...prev]);
+        addToast('success', '🥗 Meal logged!', `"${form.name}" — ${form.calories} kcal`);
+        setForm({ name: '', mealType: 'breakfast', calories: '', protein: '', carbs: '', fat: '', time: '' });
+      };
+
+      const handleDelete = (id, name) => {
+        setMeals(prev => prev.filter(m => m.id !== id));
+        addToast('info', '🗑️ Removed', `"${name}" removed.`);
+      };
+
+      return (
+        <div className="page">
+          <div className="dashboard">
+            <div className="page-header">
+              <h1>Nutrition <span style={{color:'var(--accent-orange)'}}>Tracker</span></h1>
+              <p>Monitor your daily food intake and macronutrients.</p>
+            </div>
+
+            {/* Macro overview */}
+            <div className="macro-ring-grid">
+              {[
+                { label: 'Calories', val: totalCal, max: calGoal, unit: 'kcal', color: 'var(--accent-orange)' },
+                { label: 'Protein', val: totalProtein, max: 150, unit: 'g', color: 'var(--accent-blue)' },
+                { label: 'Carbs', val: totalCarbs, max: 250, unit: 'g', color: 'var(--accent-lime)' },
+                { label: 'Fat', val: totalFat, max: 65, unit: 'g', color: 'var(--accent-purple)' },
+              ].map(m => (
+                <div key={m.label} className="macro-card">
+                  <div className="macro-label">{m.label}</div>
+                  <div className="macro-value" style={{color:m.color}}>{m.val}</div>
+                  <div className="macro-unit">/ {m.max} {m.unit}</div>
+                  <div className="progress-bar" style={{marginTop:10}}>
+                    <div className="progress-bar-fill" style={{width:`${Math.min(100,m.val/m.max*100)}%`,background:m.color}} />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="nutrition-grid">
+              {/* Left: meal log */}
+              <div>
+                <div className="tabs">
+                  <button className={`tab ${tab==='log'?'active':''}`} onClick={() => setTab('log')}>Meal Log</button>
+                  <button className={`tab ${tab==='chart'?'active':''}`} onClick={() => setTab('chart')}>Weekly Chart</button>
+                </div>
+
+                {tab === 'log' ? (
+                  <div className="meals-list">
+                    {meals.length === 0 ? (
+                      <div className="empty-state" style={{background:'var(--bg-card)',border:'1px solid var(--border)',borderRadius:'var(--radius-lg)'}}>
+                        <div className="empty-icon">🍽️</div>
+                        <div className="empty-title">No meals logged yet</div>
+                        <div className="empty-desc">Add your first meal using the form!</div>
+                      </div>
+                    ) : meals.map(m => (
+                      <div key={m.id} className="meal-item">
+                        <div className={`meal-icon icon-bg-orange`}>{MEAL_ICONS[m.mealType] || '🍽️'}</div>
+                        <div className="meal-info">
+                          <div className="meal-name">{m.name}</div>
+                          <div className="meal-time">{m.mealType.charAt(0).toUpperCase()+m.mealType.slice(1)} · {m.time}</div>
+                        </div>
+                        <div className="meal-macros">
+                          {m.protein && <span className="meal-macro-badge" style={{background:'rgba(78,159,255,0.15)',color:'var(--accent-blue)'}}>P:{m.protein}g</span>}
+                          {m.carbs && <span className="meal-macro-badge" style={{background:'var(--accent-lime-dim)',color:'var(--text-accent)'}}>C:{m.carbs}g</span>}
+                          {m.fat && <span className="meal-macro-badge" style={{background:'rgba(155,114,255,0.15)',color:'var(--accent-purple)'}}>F:{m.fat}g</span>}
+                          <span className="meal-cal">{m.calories} kcal</span>
+                        </div>
+                        <button className="btn btn-ghost btn-sm" style={{color:'var(--accent-red)',flexShrink:0}} onClick={() => handleDelete(m.id, m.name)}>🗑️</button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="chart-card">
+                    <div className="card-header">
+                      <div className="card-title">Weekly Calorie Trend</div>
+                    </div>
+                    <div className="chart-wrap">
+                      <CalorieLineChart meals={meals} />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Right: form + donut */}
+              <div style={{display:'flex',flexDirection:'column',gap:20}}>
+                {/* Calorie gauge */}
+                <div className="card">
+                  <div className="card-title" style={{marginBottom:16}}>Today's Calorie Budget</div>
+                  <div className="calorie-gauge-wrap">
+                    <CircularProgress pct={Math.min(100,Math.round(totalCal/calGoal*100))} size={120} stroke={8} color={remaining > 0 ? 'var(--accent-orange)' : 'var(--accent-red)'}>
+                      <div className="calorie-gauge-num">{totalCal}</div>
+                      <div className="calorie-gauge-label">kcal</div>
+                    </CircularProgress>
+                    <div className="calorie-gauge-remaining" style={{color: remaining > 0 ? 'var(--accent-lime)' : 'var(--accent-red)'}}>
+                      {remaining > 0 ? `${remaining} kcal remaining` : `${Math.abs(remaining)} kcal over budget`}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Macro donut */}
+                <div className="card">
+                  <div className="card-title" style={{marginBottom:16}}>Macro Distribution</div>
+                  <div className="chart-wrap" style={{height:180}}>
+                    <MacroDonutChart carbs={totalCarbs} protein={totalProtein} fat={totalFat} />
+                  </div>
+                </div>
+
+                {/* Add meal form */}
+                <div className="card">
+                  <div className="card-title" style={{marginBottom:16}}>+ Log Meal</div>
+
+                  <div className="form-group">
+                    <label className="form-label">Meal Type</label>
+                    <select className="form-control" value={form.mealType} onChange={e => setForm(f=>({...f,mealType:e.target.value}))}>
+                      <option value="breakfast">🌅 Breakfast</option>
+                      <option value="lunch">☀️ Lunch</option>
+                      <option value="dinner">🌙 Dinner</option>
+                      <option value="snack">🍎 Snack</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Food Name</label>
+                    <input className="form-control" placeholder="e.g. Grilled Chicken & Rice"
+                      value={form.name} onChange={e => setForm(f=>({...f,name:e.target.value}))} />
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">Calories</label>
+                      <input className="form-control" type="number" placeholder="450"
+                        value={form.calories} onChange={e => setForm(f=>({...f,calories:e.target.value}))} />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Protein (g)</label>
+                      <input className="form-control" type="number" placeholder="35"
+                        value={form.protein} onChange={e => setForm(f=>({...f,protein:e.target.value}))} />
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">Carbs (g)</label>
+                      <input className="form-control" type="number" placeholder="60"
+                        value={form.carbs} onChange={e => setForm(f=>({...f,carbs:e.target.value}))} />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Fat (g)</label>
+                      <input className="form-control" type="number" placeholder="12"
+                        value={form.fat} onChange={e => setForm(f=>({...f,fat:e.target.value}))} />
+                    </div>
+                  </div>
+
+                  <button className="btn btn-primary w-full" onClick={handleAddMeal}>🥗 Add Meal</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ============================================
+       PROGRESS / ANALYTICS
+    ============================================ */
+    function ProgressPage({ workouts, meals }) {
+      const [tab, setTab] = useState('overview');
+
+      const totalWorkouts = workouts.length;
+      const totalCalBurned = workouts.reduce((s,w) => s + parseInt(w.calories||0), 0);
+      const avgDuration = totalWorkouts ? Math.round(workouts.reduce((s,w) => s+parseInt(w.duration||0),0)/totalWorkouts) : 0;
+
+      const typeBreakdown = WORKOUT_TYPES.map(t => ({
+        ...t,
+        count: workouts.filter(w => w.type === t.key).length,
+      })).filter(t => t.count > 0).sort((a,b) => b.count - a.count);
+
+      return (
+        <div className="page">
+          <div className="dashboard">
+            <div className="page-header">
+              <h1>Progress <span style={{color:'var(--accent-purple)'}}>Analytics</span></h1>
+              <p>A complete picture of your fitness journey.</p>
+            </div>
+
+            <div className="tabs">
+              {['overview','achievements','challenges','ai'].map(t => (
+                <button key={t} className={`tab ${tab===t?'active':''}`} onClick={() => setTab(t)}>
+                  {t === 'overview' ? '📊 Overview' : t === 'achievements' ? '🏆 Badges' : t === 'challenges' ? '⚡ Challenges' : '🤖 AI Coach'}
+                </button>
+              ))}
+            </div>
+
+            {tab === 'overview' && (
+              <>
+                {/* Summary stats */}
+                <div className="stats-grid" style={{marginBottom:24}}>
+                  {[
+                    { label: 'Total Workouts', val: totalWorkouts, icon: '🏋️', color: 'c-blue' },
+                    { label: 'Calories Burned', val: totalCalBurned, icon: '🔥', color: 'c-lime' },
+                    { label: 'Avg Duration', val: `${avgDuration}m`, icon: '⏱️', color: 'c-purple' },
+                    { label: 'Current Streak', val: '7 days', icon: '🔥', color: 'c-orange' },
+                  ].map(s => (
+                    <div key={s.label} className="stat-card">
+                      <div className="stat-card-header">
+                        <span className="stat-label">{s.label}</span>
+                        <span style={{fontSize:20}}>{s.icon}</span>
+                      </div>
+                      <div className={`stat-value ${s.color}`}>{s.val}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="analytics-grid">
+                  {/* Weight chart */}
+                  <div className="chart-card">
+                    <div className="card-header" style={{marginBottom:16}}>
+                      <div>
+                        <div className="card-title">Weight Progress</div>
+                        <div className="card-subtitle">Last 7 months</div>
+                      </div>
+                      <span className="badge badge-purple">-6 kg 🎉</span>
+                    </div>
+                    <div className="chart-wrap">
+                      <WeightLineChart />
+                    </div>
+                  </div>
+
+                  {/* Workout type breakdown */}
+                  <div className="chart-card">
+                    <div className="card-header" style={{marginBottom:16}}>
+                      <div className="card-title">Workout Breakdown</div>
+                    </div>
+                    {typeBreakdown.length === 0 ? (
+                      <div className="empty-state">
+                        <div className="empty-icon">📊</div>
+                        <div className="empty-title">No data yet</div>
+                        <div className="empty-desc">Log workouts to see breakdown</div>
+                      </div>
+                    ) : (
+                      <div style={{display:'flex',flexDirection:'column',gap:10,marginTop:8}}>
+                        {typeBreakdown.map(t => (
+                          <div key={t.key}>
+                            <div className="progress-bar-label">
+                              <span>{t.icon} {t.label}</span>
+                              <span>{t.count} sessions</span>
+                            </div>
+                            <div className="progress-bar">
+                              <div className="progress-bar-fill" style={{
+                                width:`${(t.count/totalWorkouts*100)}%`,
+                                background: t.key==='cardio'?'var(--accent-orange)':t.key==='strength'?'var(--accent-blue)':t.key==='yoga'?'var(--accent-purple)':t.key==='hiit'?'var(--accent-red)':'var(--accent-teal)'
+                              }} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Weekly workout volume */}
+                  <div className="chart-card">
+                    <div className="card-header" style={{marginBottom:16}}>
+                      <div className="card-title">Weekly Calorie Burn</div>
+                    </div>
+                    <div className="chart-wrap">
+                      <WeeklyChart workouts={workouts} />
+                    </div>
+                  </div>
+
+                  {/* Nutrition weekly */}
+                  <div className="chart-card">
+                    <div className="card-header" style={{marginBottom:16}}>
+                      <div className="card-title">Calorie Intake Trend</div>
+                    </div>
+                    <div className="chart-wrap">
+                      <CalorieLineChart meals={meals} />
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {tab === 'achievements' && (
+              <div className="card">
+                <div className="card-header">
+                  <div>
+                    <div className="card-title">Your Achievements</div>
+                    <div className="card-subtitle">{ACHIEVEMENTS.filter(a=>a.unlocked).length} / {ACHIEVEMENTS.length} unlocked</div>
+                  </div>
+                </div>
+                <div className="achievement-grid">
+                  {ACHIEVEMENTS.map(a => (
+                    <div key={a.id} className={`achievement-card ${a.unlocked ? 'unlocked' : ''}`}>
+                      <span className={`achievement-icon ${a.unlocked ? '' : 'locked-overlay'}`}>{a.icon}</span>
+                      <div className="achievement-name">{a.name}</div>
+                      <div className="achievement-desc">{a.desc}</div>
+                      {a.unlocked && <span className="badge badge-green" style={{marginTop:8}}>Unlocked ✓</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {tab === 'challenges' && (
+              <div>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+                  <div>
+                    <div className="card-title">Active Challenges</div>
+                    <div style={{fontSize:13,color:'var(--text-muted)',marginTop:4}}>Push yourself further with these fitness challenges</div>
+                  </div>
+                </div>
+                <div className="challenge-list">
+                  {CHALLENGES.map(c => (
+                    <div key={c.id} className="challenge-card">
+                      <div className="challenge-header">
+                        <span className="challenge-icon">{c.icon}</span>
+                        <div>
+                          <div className="challenge-title">{c.title}</div>
+                          <div className="challenge-subtitle">{c.subtitle}</div>
+                        </div>
+                        <div className="challenge-reward">{c.reward}</div>
+                      </div>
+                      <div className="progress-bar-label">
+                        <span style={{fontSize:12,color:'var(--text-secondary)'}}>Day {c.progress} of {c.total}</span>
+                        <span style={{fontSize:12,fontWeight:700,color:'var(--accent-lime)'}}>{Math.round(c.progress/c.total*100)}%</span>
+                      </div>
+                      <div className="progress-bar" style={{height:8}}>
+                        <div className="progress-bar-fill" style={{
+                          width:`${c.progress/c.total*100}%`,
+                          background: c.color==='orange'?'var(--accent-orange)':c.color==='blue'?'var(--accent-blue)':'var(--accent-purple)'
+                        }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {tab === 'ai' && (
+              <div>
+                <div className="card" style={{marginBottom:20}}>
+                  <div className="card-header">
+                    <div>
+                      <div className="card-title">🤖 AI Coach Insights</div>
+                      <div className="card-subtitle">Personalized recommendations based on your training data</div>
+                    </div>
+                    <span className="ai-badge">✨ Powered by AI</span>
+                  </div>
+
+                  <div style={{background:'var(--accent-lime-dim)',border:'1px solid var(--accent-lime)',borderRadius:'var(--radius-md)',padding:'16px',marginBottom:16}}>
+                    <div style={{fontSize:13,fontWeight:700,color:'var(--text-accent)',marginBottom:6}}>📈 Weekly Analysis</div>
+                    <div style={{fontSize:13,color:'var(--text-secondary)',lineHeight:1.6}}>
+                      Great week! You've completed <strong style={{color:'var(--text-primary)'}}>5 workouts</strong> and burned <strong style={{color:'var(--text-primary)'}}>2,340 kcal</strong>. Your consistency is in the <strong style={{color:'var(--accent-lime)'}}>top 15%</strong> of FitTrack users this week.
+                    </div>
+                  </div>
+
+                  <div className="ai-suggestions">
+                    {AI_SUGGESTIONS.map((s, i) => (
+                      <div key={i} className="ai-suggestion-card">
+                        <div className="ai-icon">{s.icon}</div>
+                        <div className="ai-suggestion-text">
+                          <h4>{s.title}</h4>
+                          <p>{s.desc}</p>
+                        </div>
+                        <button className="btn btn-ghost btn-sm" style={{flexShrink:0}}>Try it →</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="card">
+                  <div className="card-header">
+                    <div className="card-title">🗓️ Suggested This Week</div>
+                  </div>
+                  <div style={{display:'flex',flexDirection:'column',gap:10,marginTop:8}}>
+                    {[
+                      {day:'Mon',workout:'Upper Body Strength',dur:45,cal:280,type:'strength'},
+                      {day:'Tue',workout:'5K Easy Run',dur:30,cal:310,type:'cardio'},
+                      {day:'Wed',workout:'Rest & Stretch',dur:20,cal:60,type:'yoga'},
+                      {day:'Thu',workout:'HIIT Circuit',dur:25,cal:350,type:'hiit'},
+                      {day:'Fri',workout:'Lower Body Strength',dur:50,cal:300,type:'strength'},
+                      {day:'Sat',workout:'Long Run / Hike',dur:60,cal:480,type:'cardio'},
+                      {day:'Sun',workout:'Active Recovery',dur:30,cal:100,type:'yoga'},
+                    ].map((w,i) => {
+                      const ti = WORKOUT_TYPES.find(t => t.key === w.type);
+                      return (
+                        <div key={i} className="activity-item">
+                          <div style={{fontFamily:'var(--font-mono)',fontSize:12,color:'var(--text-muted)',width:32,flexShrink:0}}>{w.day}</div>
+                          <div className={`activity-icon icon-bg-${ti.color}`}>{ti.icon}</div>
+                          <div className="activity-info">
+                            <div className="activity-name">{w.workout}</div>
+                            <div className="activity-time">{w.dur} min · {w.cal} kcal</div>
+                          </div>
+                          <span className={`tag tag-${w.type}`}>{ti.label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    /* ============================================
+       AUTH PAGE
+    ============================================ */
+    function AuthPage({ setUser, setPage, addToast }) {
+      const [tab, setTab] = useState('login');
+      const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' });
+      const [loading, setLoading] = useState(false);
+
+      const handleSubmit = () => {
+        if (tab === 'register') {
+          if (!form.name || !form.email || !form.password) {
+            addToast('error', 'Missing fields', 'Please fill in all required fields.'); return;
+          }
+          if (form.password !== form.confirm) {
+            addToast('error', 'Passwords do not match', 'Please re-enter your password.'); return;
+          }
+        } else {
+          if (!form.email || !form.password) {
+            addToast('error', 'Missing fields', 'Please enter your email and password.'); return;
+          }
+        }
+
+        setLoading(true);
+        setTimeout(() => {
+          setLoading(false);
+          const user = { name: form.name || form.email.split('@')[0], email: form.email };
+          setUser(user);
+          addToast('success', `Welcome${tab==='register'?' to FitTrack Pro':' back'}, ${user.name}! 🎉`, tab==='register' ? 'Your account is ready.' : 'Let\'s crush it today!');
+          setPage('Dashboard');
+        }, 1200);
+      };
+
+      return (
+        <div className="page">
+          <div className="auth-page">
+            <div className="auth-bg-text">FIT</div>
+            <div className="auth-card">
+              <div className="auth-logo">
+                <div style={{display:'flex',alignItems:'center',gap:8,justifyContent:'center'}}>
+                  <div className="logo-icon" style={{width:40,height:40,fontSize:20}}>⚡</div>
+                  <span className="logo-text" style={{fontSize:24}}>FIT<span>TRACK</span></span>
+                </div>
+              </div>
+
+              <h2 className="auth-title">{tab === 'login' ? 'Welcome back' : 'Create account'}</h2>
+              <p className="auth-subtitle">{tab === 'login' ? 'Sign in to continue your fitness journey' : 'Join 50,000+ athletes on FitTrack Pro'}</p>
+
+              <div className="auth-tabs">
+                <button className={`auth-tab ${tab==='login'?'active':''}`} onClick={() => setTab('login')}>Sign In</button>
+                <button className={`auth-tab ${tab==='register'?'active':''}`} onClick={() => setTab('register')}>Register</button>
+              </div>
+
+              {/* Social login */}
+              <button className="social-btn">
+                <span>🌐</span> Continue with Google
+              </button>
+
+              <div className="auth-divider">or continue with email</div>
+
+              {tab === 'register' && (
+                <div className="form-group">
+                  <label className="form-label">Full Name</label>
+                  <input className="form-control" placeholder="Alex Johnson"
+                    value={form.name} onChange={e => setForm(f=>({...f,name:e.target.value}))} />
+                </div>
+              )}
+
+              <div className="form-group">
+                <label className="form-label">Email Address</label>
+                <input className="form-control" type="email" placeholder="alex@example.com"
+                  value={form.email} onChange={e => setForm(f=>({...f,email:e.target.value}))} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Password</label>
+                <input className="form-control" type="password" placeholder="••••••••"
+                  value={form.password} onChange={e => setForm(f=>({...f,password:e.target.value}))} />
+              </div>
+
+              {tab === 'register' && (
+                <div className="form-group">
+                  <label className="form-label">Confirm Password</label>
+                  <input className="form-control" type="password" placeholder="••••••••"
+                    value={form.confirm} onChange={e => setForm(f=>({...f,confirm:e.target.value}))} />
+                </div>
+              )}
+
+              {tab === 'login' && (
+                <div style={{textAlign:'right',marginBottom:16}}>
+                  <span style={{fontSize:13,color:'var(--accent-lime)',cursor:'pointer',fontWeight:500}}>Forgot password?</span>
+                </div>
+              )}
+
+              <button className="btn btn-primary w-full btn-lg" onClick={handleSubmit} disabled={loading}>
+                {loading ? (
+                  <span>Loading <span className="loading-dot"></span></span>
+                ) : (
+                  tab === 'login' ? '→ Sign In' : '→ Create Account'
+                )}
+              </button>
+
+              {tab === 'register' && (
+                <div style={{fontSize:12,color:'var(--text-muted)',textAlign:'center',marginTop:14,lineHeight:1.6}}>
+                  By creating an account, you agree to our <span style={{color:'var(--accent-lime)',cursor:'pointer'}}>Terms of Service</span> and <span style={{color:'var(--accent-lime)',cursor:'pointer'}}>Privacy Policy</span>.
+                </div>
+              )}
+
+              <div className="auth-footer">
+                {tab === 'login' ? "Don't have an account? " : "Already have an account? "}
+                <a onClick={() => setTab(tab === 'login' ? 'register' : 'login')}>
+                  {tab === 'login' ? 'Sign up free' : 'Sign in'}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ============================================
+       SEED DATA
+    ============================================ */
+    const SEED_WORKOUTS = [
+      { id: 1, name: 'Morning Run', type: 'cardio', duration: '35', calories: '340', notes: 'Felt great today!', date: new Date().toISOString().split('T')[0] },
+      { id: 2, name: 'Push Day', type: 'strength', duration: '50', calories: '280', notes: 'New bench PR!', date: new Date(Date.now()-86400000).toISOString().split('T')[0] },
+      { id: 3, name: 'HIIT Cardio', type: 'hiit', duration: '25', calories: '380', notes: '', date: new Date(Date.now()-2*86400000).toISOString().split('T')[0] },
+      { id: 4, name: 'Yoga Flow', type: 'yoga', duration: '40', calories: '140', notes: 'Great for recovery', date: new Date(Date.now()-3*86400000).toISOString().split('T')[0] },
+      { id: 5, name: 'Leg Day', type: 'strength', duration: '55', calories: '320', notes: '', date: new Date(Date.now()-4*86400000).toISOString().split('T')[0] },
+    ];
+
+    const SEED_MEALS = [
+      { id: 1, name: 'Oats with Banana & Honey', mealType: 'breakfast', calories: '380', protein: '12', carbs: '68', fat: '6', time: '07:30' },
+      { id: 2, name: 'Grilled Chicken Bowl', mealType: 'lunch', calories: '520', protein: '45', carbs: '55', fat: '10', time: '12:15' },
+      { id: 3, name: 'Greek Yogurt & Almonds', mealType: 'snack', calories: '210', protein: '14', carbs: '18', fat: '9', time: '15:30' },
+      { id: 4, name: 'Salmon with Vegetables', mealType: 'dinner', calories: '480', protein: '38', carbs: '30', fat: '18', time: '19:00' },
+    ];
+
+    /* ============================================
+       ROOT APP
+    ============================================ */
+    function App() {
+      const [page, setPage] = useState('Home');
+      const [theme, setTheme] = useLocalStorage('theme', 'dark');
+      const [user, setUser] = useLocalStorage('user', null);
+      const [workouts, setWorkouts] = useLocalStorage('workouts', SEED_WORKOUTS);
+      const [meals, setMeals] = useLocalStorage('meals', SEED_MEALS);
+      const { toasts, add: addToast, remove } = useToasts();
+
+      useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+      }, [theme]);
+
+      const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark');
+
+      const goTo = (p) => {
+        if (['Dashboard','Workouts','Nutrition','Progress'].includes(p) && !user) {
+          setPage('Auth');
+        } else {
+          setPage(p);
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+
+      const renderPage = () => {
+        switch(page) {
+          case 'Home': return <HomePage setPage={goTo} user={user} />;
+          case 'Dashboard': return <DashboardPage workouts={workouts} meals={meals} user={user} addToast={addToast} setPage={goTo} />;
+          case 'Workouts': return <WorkoutsPage workouts={workouts} setWorkouts={setWorkouts} addToast={addToast} />;
+          case 'Nutrition': return <NutritionPage meals={meals} setMeals={setMeals} addToast={addToast} />;
+          case 'Progress': return <ProgressPage workouts={workouts} meals={meals} />;
+          case 'Auth': return <AuthPage setUser={setUser} setPage={goTo} addToast={addToast} />;
+          default: return <HomePage setPage={goTo} user={user} />;
+        }
+      };
+
+      return (
+        <>
+          <Navbar
+            page={page}
+            setPage={goTo}
+            theme={theme}
+            toggleTheme={toggleTheme}
+            user={user}
+            setUser={setUser}
+          />
+          {renderPage()}
+          <ToastContainer toasts={toasts} remove={remove} />
+        </>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
