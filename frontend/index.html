@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>VoiceGuard AI | Voice Clone Detection</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Inter, Arial, sans-serif;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at top left, #1e3a8a 0%, transparent 35%),
+                radial-gradient(circle at bottom right, #581c87 0%, transparent 35%),
+                #070b17;
+            color: #ffffff;
+            padding: 30px 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1050px;
+            margin: auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .logo {
+            width: 65px;
+            height: 65px;
+            margin: 0 auto 18px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            background: linear-gradient(135deg, #2563eb, #9333ea);
+            box-shadow: 0 15px 40px rgba(37, 99, 235, 0.35);
+        }
+
+        h1 {
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #aeb8d0;
+            font-size: 1.05rem;
+        }
+
+        .badge {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 7px 14px;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 30px;
+            background: rgba(255,255,255,0.05);
+            color: #cbd5e1;
+            font-size: 0.85rem;
+        }
+
+        .card {
+            background: rgba(15, 23, 42, 0.78);
+            border: 1px solid rgba(255,255,255,0.10);
+            border-radius: 24px;
+            padding: 30px;
+            backdrop-filter: blur(18px);
+            box-shadow: 0 25px 80px rgba(0,0,0,0.35);
+        }
+
+        .upload-area {
+            border: 2px dashed rgba(148,163,184,0.45);
+            border-radius: 20px;
+            padding: 55px 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.25s ease;
+        }
+
+        .upload-area:hover,
+        .upload-area.dragover {
+            border-color: #60a5fa;
+            background: rgba(37,99,235,0.08);
+            transform: translateY(-2px);
+        }
+
+        .upload-icon {
+            font-size: 50px;
+            margin-bottom: 18px;
+        }
+
+        .upload-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .upload-description {
+            color: #94a3b8;
+            margin-bottom: 15px;
+        }
+
+        .formats {
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .file-info {
+            display: none;
+            margin-top: 20px;
+            padding: 15px 18px;
+            border-radius: 14px;
+            background: rgba(30,41,59,0.8);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .file-info.show {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .file-name {
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-size {
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+
+        .analyze-btn {
+            width: 100%;
+            margin-top: 20px;
+            padding: 16px 20px;
+            border: none;
+            border-radius: 14px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            transition: 0.25s ease;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(59,130,246,0.25);
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .status {
+            display: none;
+            text-align: center;
+            margin-top: 22px;
+            color: #93c5fd;
+        }
+
+        .status.show {
+            display: block;
+        }
+
+        .spinner {
+            width: 28px;
+            height: 28px;
+            margin: 0 auto 10px;
+            border: 3px solid rgba(255,255,255,0.15);
+            border-top-color: #60a5fa;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .error {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 12px;
+            background: rgba(127,29,29,0.35);
+            border: 1px solid rgba(248,113,113,0.35);
+            color: #fecaca;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .results {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .result-main {
+            text-align: center;
+            padding: 30px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.04);
+            margin-bottom: 20px;
+        }
+
+        .result-icon {
+            font-size: 55px;
+            margin-bottom: 12px;
+        }
+
+        .result-label {
+            font-size: 2.4rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .result-description {
+            margin-top: 8px;
+            color: #94a3b8;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .metric {
+            padding: 22px;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .metric-title {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            margin-bottom: 9px;
+        }
+
+        .metric-value {
+            font-size: 1.7rem;
+            font-weight: 750;
+        }
+
+        .risk-bar-container {
+            margin-top: 25px;
+        }
+
+        .risk-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 9px;
+            color: #cbd5e1;
+        }
+
+        .risk-bar {
+            height: 10px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #1e293b;
+        }
+
+        .risk-fill {
+            width: 0%;
+            height: 100%;
+            transition: width 0.7s ease;
+            background: linear-gradient(90deg, #22c55e, #eab308, #ef4444);
+        }
+
+        .recommendation {
+            margin-top: 20px;
+            padding: 18px;
+            border-radius: 15px;
+            background: rgba(37,99,235,0.08);
+            border: 1px solid rgba(96,165,250,0.18);
+            color: #bfdbfe;
+        }
+
+        .metadata {
+            margin-top: 20px;
+            color: #64748b;
+            font-size: 0.82rem;
+            text-align: center;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 25px;
+            color: #64748b;
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 700px) {
+            .card {
+                padding: 20px;
+            }
+
+            .metrics {
+                grid-template-columns: 1fr;
+            }
+
+            .upload-area {
+                padding: 40px 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <header>
+        <div class="logo">🎙️</div>
+
+        <h1>VoiceGuard AI</h1>
+
+        <p class="subtitle">
+            AI-Powered Voice Clone Detection
+        </p>
+
+        <div class="badge">
+            🛡️ Voice Authenticity Analysis
+        </div>
+    </header>
+
+
+    <main class="card">
+
+        <div
+            class="upload-area"
+            id="uploadArea"
+        >
+            <div class="upload-icon">🎧</div>
+
+            <div class="upload-title">
+                Upload an audio file
+            </div>
+
+            <div class="upload-description">
+                Drag & drop your audio here or click to browse
+            </div>
+
+            <div class="formats">
+                WAV • MP3 • FLAC • OGG • M4A
+            </div>
+
+            <input
+                type="file"
+                id="fileInput"
+                accept=".wav,.mp3,.flac,.ogg,.m4a,audio/*"
+            >
+        </div>
+
+
+        <div
+            class="file-info"
+            id="fileInfo"
+        >
+            <div>
+                <div
+                    class="file-name"
+                    id="fileName"
+                ></div>
+
+                <div
+                    class="file-size"
+                    id="fileSize"
+                ></div>
+            </div>
+
+            <div>✓</div>
+        </div>
+
+
+        <button
+            class="analyze-btn"
+            id="analyzeBtn"
+            disabled
+        >
+            🔍 Analyze Voice
+        </button>
+
+
+        <div
+            class="status"
+            id="status"
+        >
+            <div class="spinner"></div>
+
+            <div>
+                Analyzing voice characteristics...
+            </div>
+        </div>
+
+
+        <div
+            class="error"
+            id="error"
+        ></div>
+
+
+        <section
+            class="results"
+            id="results"
+        >
+
+            <div class="result-main">
+
+                <div
+                    class="result-icon"
+                    id="resultIcon"
+                >
+                    🛡️
+                </div>
+
+                <div
+                    class="result-label"
+                    id="resultLabel"
+                >
+                    REAL
+                </div>
+
+                <div
+                    class="result-description"
+                    id="resultDescription"
+                >
+                    Analysis completed.
+                </div>
+
+            </div>
+
+
+            <div class="metrics">
+
+                <div class="metric">
+
+                    <div class="metric-title">
+                        Confidence
+                    </div>
+
+                    <div
+                        class="metric-value"
+                        id="confidence"
+                    >
+                        —
+                    </div>
+
+                </div>
+
+
+                <div class="metric">
+
+                    <div class="metric-title">
+                        Cloned Probability
+                    </div>
+
+                    <div
+                        class="metric-value"
+                        id="clonedProbability"
+                    >
+                        —
+                    </div>
+
+                </div>
+
+
+                <div class="metric">
+
+                    <div class="metric-title">
+                        Risk Score
+                    </div>
+
+                    <div
+                        class="metric-value"
+                        id="riskScore"
+                    >
+                        —
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="risk-bar-container">
+
+                <div class="risk-header">
+
+                    <span>
+                        Clone Risk
+                    </span>
+
+                    <span id="riskText">
+                        0%
+                    </span>
+
+                </div>
+
+                <div class="risk-bar">
+
+                    <div
+                        class="risk-fill"
+                        id="riskFill"
+                    ></div>
+
+                </div>
+
+            </div>
+
+
+            <div
+                class="recommendation"
+                id="recommendation"
+            >
+            </div>
+
+
+            <div
+                class="metadata"
+                id="metadata"
+            >
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <footer>
+        VoiceGuard AI • AI/ML Prototype • Voice Authenticity Protection
+    </footer>
+
+</div>
+
+
+<script>
+
+    const uploadArea = document.getElementById("uploadArea");
+    const fileInput = document.getElementById("fileInput");
+
+    const fileInfo = document.getElementById("fileInfo");
+    const fileName = document.getElementById("fileName");
+    const fileSize = document.getElementById("fileSize");
+
+    const analyzeBtn = document.getElementById("analyzeBtn");
+
+    const status = document.getElementById("status");
+    const errorBox = document.getElementById("error");
+
+    const results = document.getElementById("results");
+
+    const resultIcon = document.getElementById("resultIcon");
+    const resultLabel = document.getElementById("resultLabel");
+    const resultDescription = document.getElementById("resultDescription");
+
+    const confidence = document.getElementById("confidence");
+    const clonedProbability = document.getElementById("clonedProbability");
+    const riskScore = document.getElementById("riskScore");
+
+    const riskFill = document.getElementById("riskFill");
+    const riskText = document.getElementById("riskText");
+
+    const recommendation = document.getElementById("recommendation");
+    const metadata = document.getElementById("metadata");
+
+    let selectedFile = null;
+
+
+    uploadArea.addEventListener("click", () => {
+        fileInput.click();
+    });
+
+
+    fileInput.addEventListener("change", (event) => {
+
+        const file = event.target.files[0];
+
+        if (file) {
+            selectFile(file);
+        }
+
+    });
+
+
+    uploadArea.addEventListener("dragover", (event) => {
+
+        event.preventDefault();
+
+        uploadArea.classList.add("dragover");
+
+    });
+
+
+    uploadArea.addEventListener("dragleave", () => {
+
+        uploadArea.classList.remove("dragover");
+
+    });
+
+
+    uploadArea.addEventListener("drop", (event) => {
+
+        event.preventDefault();
+
+        uploadArea.classList.remove("dragover");
+
+        const file = event.dataTransfer.files[0];
+
+        if (file) {
+            selectFile(file);
+        }
+
+    });
+
+
+    function selectFile(file) {
+
+        const allowedExtensions = [
+            ".wav",
+            ".mp3",
+            ".flac",
+            ".ogg",
+            ".m4a"
+        ];
+
+        const extension =
+            "." + file.name.split(".").pop().toLowerCase();
+
+        if (!allowedExtensions.includes(extension)) {
+
+            showError(
+                "Unsupported audio format. Please use WAV, MP3, FLAC, OGG, or M4A."
+            );
+
+            return;
+        }
+
+
+        selectedFile = file;
+
+        fileName.textContent = file.name;
+
+        fileSize.textContent =
+            formatFileSize(file.size);
+
+        fileInfo.classList.add("show");
+
+        analyzeBtn.disabled = false;
+
+        hideError();
+
+        results.classList.remove("show");
+    }
+
+
+    function formatFileSize(bytes) {
+
+        if (bytes < 1024) {
+            return bytes + " B";
+        }
+
+        if (bytes < 1024 * 1024) {
+            return (bytes / 1024).toFixed(1) + " KB";
+        }
+
+        return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+    }
+
+
+    analyzeBtn.addEventListener("click", analyzeAudio);
+
+
+    async function analyzeAudio() {
+
+        if (!selectedFile) {
+            showError("Please select an audio file first.");
+            return;
+        }
+
+
+        analyzeBtn.disabled = true;
+
+        status.classList.add("show");
+
+        results.classList.remove("show");
+
+        hideError();
+
+
+        const formData = new FormData();
+
+        formData.append(
+            "file",
+            selectedFile
+        );
+
+
+        try {
+
+            const response = await fetch(
+                "/analyze",
+                {
+                    method: "POST",
+                    body: formData
+                }
+            );
+
+
+            const data = await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.detail ||
+                    "Audio analysis failed."
+                );
+
+            }
+
+
+            displayResults(data);
+
+        }
+
+        catch (error) {
+
+            showError(
+                error.message ||
+                "Unable to connect to the detection server."
+            );
+
+        }
+
+        finally {
+
+            status.classList.remove("show");
+
+            analyzeBtn.disabled = false;
+
+        }
+
+    }
+
+
+    function displayResults(data) {
+
+        const prediction =
+            String(data.prediction || "UNKNOWN")
+            .toUpperCase();
+
+
+        const confidenceValue =
+            Number(data.confidence || 0);
+
+
+        const clonedValue =
+            Number(data.cloned_probability || 0);
+
+
+        const risk =
+            Number(data.risk_score || 0);
+
+
+        const isCloned =
+            prediction === "CLONED";
+
+
+        resultLabel.textContent =
+            prediction;
+
+
+        if (isCloned) {
+
+            resultIcon.textContent = "⚠️";
+
+            resultDescription.textContent =
+                "Potential synthetic or cloned voice detected.";
+
+        }
+
+        else {
+
+            resultIcon.textContent = "🛡️";
+
+            resultDescription.textContent =
+                "Voice appears authentic based on the model analysis.";
+
+        }
+
+
+        confidence.textContent =
+            formatPercentage(confidenceValue);
+
+
+        clonedProbability.textContent =
+            formatPercentage(clonedValue);
+
+
+        riskScore.textContent =
+            risk + "/100";
+
+
+        riskFill.style.width =
+            Math.max(0, Math.min(100, risk)) + "%";
+
+
+        riskText.textContent =
+            risk + "%";
+
+
+        if (risk >= 70) {
+
+            recommendation.innerHTML =
+                "<strong>⚠️ High Risk:</strong> " +
+                "Treat this voice as potentially cloned. " +
+                "Verify the speaker through another trusted channel.";
+
+        }
+
+        else if (risk >= 40) {
+
+            recommendation.innerHTML =
+                "<strong>🟡 Moderate Risk:</strong> " +
+                "Additional verification is recommended before trusting the audio.";
+
+        }
+
+        else {
+
+            recommendation.innerHTML =
+                "<strong>🟢 Low Risk:</strong> " +
+                "No strong indication of voice cloning was detected.";
+
+        }
+
+
+        const featureCount =
+            data.feature_count !== undefined
+                ? data.feature_count
+                : "—";
+
+
+        metadata.textContent =
+            "File: " +
+            (data.filename || selectedFile.name) +
+            " • Features analyzed: " +
+            featureCount;
+
+
+        results.classList.add("show");
+
+    }
+
+
+    function formatPercentage(value) {
+
+        return (
+            Math.max(0, Math.min(1, value)) * 100
+        ).toFixed(1) + "%";
+
+    }
+
+
+    function showError(message) {
+
+        errorBox.textContent = "⚠️ " + message;
+
+        errorBox.classList.add("show");
+
+    }
+
+
+    function hideError() {
+
+        errorBox.classList.remove("show");
+
+    }
+
+</script>
+
+</body>
+</html>
