@@ -5,12 +5,15 @@ from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.audio_utils import get_audio_quality
 from app.config import (
     API_DESCRIPTION,
     API_TITLE,
     API_VERSION,
+    FRONTEND_DIR,
 )
 from app.deepfake_detector import VoiceCloneDetector
 
@@ -50,13 +53,9 @@ detector = VoiceCloneDetector()
 # HEALTH CHECK
 # ============================================================
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
 def root():
-    return {
-        "service": "Voice Clone Detection API",
-        "status": "online",
-        "version": API_VERSION,
-    }
+    return FileResponse(FRONTEND_DIR / "index.html")
 
 
 @app.get("/health")
@@ -203,3 +202,9 @@ async def analyze_audio(
                 os.remove(temp_path)
             except OSError:
                 pass
+
+app.mount(
+    "/",
+    StaticFiles(directory=str(FRONTEND_DIR), html=True),
+    name="frontend",
+)
